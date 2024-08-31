@@ -50,6 +50,8 @@ android {
 }
 
 dependencies {
+    //constraintLayout in Compose
+    implementation(libs.androidx.constraintLayout)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
