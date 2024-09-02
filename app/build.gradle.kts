@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.jetbrains.kotlin.kapt)
 }
 
 android {
@@ -50,6 +51,16 @@ android {
 }
 
 dependencies {
+    //dagger for DI
+    implementation(libs.google.dagger)
+    kapt(libs.google.dagger.compiler)
+
+    //timber for smart logging
+    implementation(libs.timber)
+    
+    //retrofit
+    implementation(libs.squareup.retrofit)
+
     //constraintLayout in Compose
     implementation(libs.androidx.constraintLayout)
 
