@@ -19,37 +19,49 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.lifecycle.ViewModelProvider
 import com.terabyte.mediastorage.R
 import com.terabyte.mediastorage.ui.theme.MediaStorageTheme
 import com.terabyte.mediastorage.ui.theme.Orange
+import com.terabyte.mediastorage.viewmodel.MainViewModel
 
 class MainActivity : ComponentActivity() {
+    private lateinit var viewModel: MainViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        viewModel = ViewModelProvider(
+            this,
+            ViewModelProvider.AndroidViewModelFactory.getInstance(application)
+        )[MainViewModel::class]
+
         enableEdgeToEdge()
         setContent {
             MediaStorageTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainContent()
+                    MainContent(viewModel)
                 }
             }
         }
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun MainContent() {
+fun MainContent(viewModel: MainViewModel) {
     ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
@@ -74,14 +86,16 @@ fun MainContent() {
                 .constrainAs(linearLogin) {
                     top.linkTo(textHello.top, margin = 100.dp)
                     centerHorizontallyTo(parent)
-                }
+                },
+            viewModel
         )
         RowPassword(
             modifier = Modifier
                 .constrainAs(linearPassword) {
                     top.linkTo(linearLogin.bottom, margin = 16.dp)
                     centerHorizontallyTo(parent)
-                }
+                },
+            viewModel
         )
 
         Button(
@@ -105,7 +119,7 @@ fun MainContent() {
 }
 
 @Composable
-fun RowLogin(modifier: Modifier) {
+fun RowLogin(modifier: Modifier, viewModel: MainViewModel) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
@@ -138,9 +152,9 @@ fun RowLogin(modifier: Modifier) {
             textStyle = TextStyle(
                 fontSize = 18.sp
             ),
-            value = "",
+            value = viewModel.stateLogin.value,
             onValueChange = {
-
+                viewModel.stateLogin.value = it
             },
             modifier = Modifier
                 .padding(start = 16.dp)
@@ -150,7 +164,7 @@ fun RowLogin(modifier: Modifier) {
 }
 
 @Composable
-fun RowPassword(modifier: Modifier) {
+fun RowPassword(modifier: Modifier, viewModel: MainViewModel) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
@@ -183,9 +197,14 @@ fun RowPassword(modifier: Modifier) {
                 fontSize = 18.sp
             ),
             singleLine = true,
-            value = "",
+            value = viewModel.statePassword.value,
             onValueChange = {
-
+                viewModel.statePassword.value = it
+            },
+            visualTransformation = if (viewModel.statePasswordVisibility.value) {
+                VisualTransformation.None
+            } else {
+                PasswordVisualTransformation()
             },
             modifier = Modifier
                 .padding(start = 16.dp)
@@ -193,7 +212,7 @@ fun RowPassword(modifier: Modifier) {
         )
         IconButton(
             onClick = {
-
+                viewModel.statePasswordVisibility.value = !viewModel.statePasswordVisibility.value
             },
             modifier = Modifier
                 .padding(start = 8.dp)
@@ -201,7 +220,11 @@ fun RowPassword(modifier: Modifier) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_show_password),
                 contentDescription = "",
-                tint = Color.White
+                tint = if(viewModel.statePasswordVisibility.value) {
+                    Color.Blue
+                } else {
+                    Color.White
+                }
             )
         }
     }
