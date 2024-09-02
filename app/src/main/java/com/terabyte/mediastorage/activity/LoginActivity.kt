@@ -1,5 +1,6 @@
 package com.terabyte.mediastorage.activity
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -51,179 +52,189 @@ class LoginActivity : ComponentActivity() {
         setContent {
             MediaStorageTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainContent(viewModel)
+                    LoginContent()
                 }
             }
         }
     }
-}
 
-@Composable
-fun MainContent(viewModel: MainViewModel) {
-    ConstraintLayout(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Orange)
-    ) {
-        val (textHello, linearLogin, linearPassword, buttonShowPassword, buttonLogin) = createRefs()
-        Text(
-            text = "Hello!",
-            fontSize = 34.sp,
-            color = Color.White,
-            modifier = Modifier
-                .constrainAs(textHello) {
-                    top.linkTo(parent.top)
-                    bottom.linkTo(parent.bottom, margin = 250.dp)
-                    start.linkTo(parent.start)
-                    end.linkTo(parent.end)
-                }
 
-        )
-        RowLogin(
-            modifier = Modifier
-                .constrainAs(linearLogin) {
-                    top.linkTo(textHello.top, margin = 100.dp)
-                    centerHorizontallyTo(parent)
-                },
-            viewModel
-        )
-        RowPassword(
-            modifier = Modifier
-                .constrainAs(linearPassword) {
-                    top.linkTo(linearLogin.bottom, margin = 16.dp)
-                    centerHorizontallyTo(parent)
-                },
-            viewModel
-        )
-
-        Button(
-            onClick = {
-
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.White
-            ),
-            modifier = Modifier
-                .constrainAs(buttonLogin) {
-                    top.linkTo(linearPassword.bottom)
-                    bottom.linkTo(parent.bottom)
-                    centerHorizontallyTo(parent)
-                }
+    @Composable
+    fun RowLogin(modifier: Modifier) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = modifier
+                .fillMaxWidth(0.8f)
         ) {
-            Text(text = "Login!", color = Orange)
-        }
-
-    }
-}
-
-@Composable
-fun RowLogin(modifier: Modifier, viewModel: MainViewModel) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .fillMaxWidth(0.8f)
-    ) {
-        Text(
-            text = "Login:",
-            color = Color.White,
-            fontSize = 18.sp,
-        )
-        TextField(
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text
-            ),
-            singleLine = true,
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent,
-                errorContainerColor = Color.Transparent,
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
-                disabledTextColor = Color.White,
-                errorTextColor = Color.White,
-                focusedIndicatorColor = Color.White,
-                unfocusedIndicatorColor = Color.White,
-                disabledIndicatorColor = Color.White,
-                errorIndicatorColor = Color.White
-            ),
-            textStyle = TextStyle(
-                fontSize = 18.sp
-            ),
-            value = viewModel.stateLogin.value,
-            onValueChange = {
-                viewModel.stateLogin.value = it
-            },
-            modifier = Modifier
-                .padding(start = 16.dp)
-                .weight(1f)
-        )
-    }
-}
-
-@Composable
-fun RowPassword(modifier: Modifier, viewModel: MainViewModel) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .fillMaxWidth(0.8f)
-    ) {
-        Text(
-            text = "Password:",
-            color = Color.White,
-            fontSize = 18.sp,
-        )
-        TextField(
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password
-            ),
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.Transparent,
-                unfocusedContainerColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent,
-                errorContainerColor = Color.Transparent,
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
-                disabledTextColor = Color.White,
-                errorTextColor = Color.White,
-                focusedIndicatorColor = Color.White,
-                unfocusedIndicatorColor = Color.White,
-                disabledIndicatorColor = Color.White,
-                errorIndicatorColor = Color.White
-            ),
-            textStyle = TextStyle(
-                fontSize = 18.sp
-            ),
-            singleLine = true,
-            value = viewModel.statePassword.value,
-            onValueChange = {
-                viewModel.statePassword.value = it
-            },
-            visualTransformation = if (viewModel.statePasswordVisibility.value) {
-                VisualTransformation.None
-            } else {
-                PasswordVisualTransformation()
-            },
-            modifier = Modifier
-                .padding(start = 16.dp)
-                .weight(1f)
-        )
-        IconButton(
-            onClick = {
-                viewModel.statePasswordVisibility.value = !viewModel.statePasswordVisibility.value
-            },
-            modifier = Modifier
-                .padding(start = 8.dp)
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_show_password),
-                contentDescription = "",
-                tint = if(viewModel.statePasswordVisibility.value) {
-                    Color.Blue
-                } else {
-                    Color.White
-                }
+            Text(
+                text = "Login:",
+                color = Color.White,
+                fontSize = 18.sp,
+            )
+            TextField(
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text
+                ),
+                singleLine = true,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
+                    errorContainerColor = Color.Transparent,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    disabledTextColor = Color.White,
+                    errorTextColor = Color.White,
+                    focusedIndicatorColor = Color.White,
+                    unfocusedIndicatorColor = Color.White,
+                    disabledIndicatorColor = Color.White,
+                    errorIndicatorColor = Color.White
+                ),
+                textStyle = TextStyle(
+                    fontSize = 18.sp
+                ),
+                value = viewModel.stateLogin.value,
+                onValueChange = {
+                    viewModel.stateLogin.value = it
+                },
+                modifier = Modifier
+                    .padding(start = 16.dp)
+                    .weight(1f)
             )
         }
     }
+
+    @Composable
+    fun RowPassword(modifier: Modifier) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = modifier
+                .fillMaxWidth(0.8f)
+        ) {
+            Text(
+                text = "Password:",
+                color = Color.White,
+                fontSize = 18.sp,
+            )
+            TextField(
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password
+                ),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
+                    errorContainerColor = Color.Transparent,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    disabledTextColor = Color.White,
+                    errorTextColor = Color.White,
+                    focusedIndicatorColor = Color.White,
+                    unfocusedIndicatorColor = Color.White,
+                    disabledIndicatorColor = Color.White,
+                    errorIndicatorColor = Color.White
+                ),
+                textStyle = TextStyle(
+                    fontSize = 18.sp
+                ),
+                singleLine = true,
+                value = viewModel.statePassword.value,
+                onValueChange = {
+                    viewModel.statePassword.value = it
+                },
+                visualTransformation = if (viewModel.statePasswordVisibility.value) {
+                    VisualTransformation.None
+                } else {
+                    PasswordVisualTransformation()
+                },
+                modifier = Modifier
+                    .padding(start = 16.dp)
+                    .weight(1f)
+            )
+            IconButton(
+                onClick = {
+                    viewModel.statePasswordVisibility.value =
+                        !viewModel.statePasswordVisibility.value
+                },
+                modifier = Modifier
+                    .padding(start = 8.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_show_password),
+                    contentDescription = "",
+                    tint = if (viewModel.statePasswordVisibility.value) {
+                        Color.Blue
+                    } else {
+                        Color.White
+                    }
+                )
+            }
+        }
+    }
+
+    @Composable
+    fun LoginContent() {
+        ConstraintLayout(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Orange)
+        ) {
+            val (textHello, linearLogin, linearPassword, buttonShowPassword, buttonLogin) = createRefs()
+            Text(
+                text = "Hello!",
+                fontSize = 34.sp,
+                color = Color.White,
+                modifier = Modifier
+                    .constrainAs(textHello) {
+                        top.linkTo(parent.top)
+                        bottom.linkTo(parent.bottom, margin = 250.dp)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    }
+
+            )
+            RowLogin(
+                modifier = Modifier
+                    .constrainAs(linearLogin) {
+                        top.linkTo(textHello.top, margin = 100.dp)
+                        centerHorizontallyTo(parent)
+                    },
+
+                )
+            RowPassword(
+                modifier = Modifier
+                    .constrainAs(linearPassword) {
+                        top.linkTo(linearLogin.bottom, margin = 16.dp)
+                        centerHorizontallyTo(parent)
+                    },
+
+                )
+
+            Button(
+                onClick = {
+                    startMainActivity()
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White
+                ),
+                modifier = Modifier
+                    .constrainAs(buttonLogin) {
+                        top.linkTo(linearPassword.bottom)
+                        bottom.linkTo(parent.bottom)
+                        centerHorizontallyTo(parent)
+                    }
+            ) {
+                Text(text = "Login!", color = Orange)
+            }
+
+        }
+    }
+
+    private fun startMainActivity() {
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
+    }
 }
+
+
+
