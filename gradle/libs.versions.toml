@@ -12,8 +12,10 @@ constraintLayout = "1.0.1"
 retrofit = "2.11.0"
 timber = "5.0.1"
 dagger = "2.46.1"
+navigationCompose = "2.7.7"
 
 [libraries]
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose"}
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 squareup-retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
