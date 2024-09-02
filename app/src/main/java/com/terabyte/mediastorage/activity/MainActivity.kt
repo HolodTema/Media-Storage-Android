@@ -6,9 +6,17 @@ import android.provider.Contacts
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Call
@@ -20,9 +28,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -46,7 +57,7 @@ class MainActivity : ComponentActivity() {
                         BottomNavigationBar(navController)
                     }
                 ) { innerPadding ->
-                    MainContent(navController)
+                    MainContent(navController, innerPadding)
                 }
             }
         }
@@ -55,8 +66,11 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun MainContent(navController: NavHostController) {
-    Column() {
+fun MainContent(navController: NavHostController, paddingValues: PaddingValues) {
+    Column(
+        modifier = Modifier
+            .padding(top = paddingValues.calculateTopPadding())
+        ) {
         NavHost(navController, startDestination = "account") {
             composable(Routes.Account.route) {
                 Account()
@@ -77,8 +91,33 @@ fun MainContent(navController: NavHostController) {
 fun Videos() {
 }
 
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun Photos() {
+    Column() {
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .padding(top = 8.dp, bottom = 8.dp, start = 8.dp, end = 8.dp)
+                .fillMaxWidth()
+        ) {
+            Text(text = "Amount photos: ")
+            Text(text = "Memory usage: ")
+        }
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(3),
+            modifier = Modifier
+        ) {
+            items(20) {
+                Box(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .background(Color.Green)
+                )
+            }
+        }
+    }
 }
 
 @Composable

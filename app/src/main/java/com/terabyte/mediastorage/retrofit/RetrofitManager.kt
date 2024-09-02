@@ -9,4 +9,8 @@ object RetrofitManager {
         .build()
 
 
+    fun auth(login: String, password: String, listener: () -> Unit) {
+
+    }
+
 }
