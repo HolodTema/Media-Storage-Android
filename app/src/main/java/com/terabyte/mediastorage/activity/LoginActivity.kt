@@ -16,10 +16,15 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,10 +40,12 @@ import androidx.lifecycle.ViewModelProvider
 import com.terabyte.mediastorage.R
 import com.terabyte.mediastorage.ui.theme.MediaStorageTheme
 import com.terabyte.mediastorage.ui.theme.Orange
-import com.terabyte.mediastorage.viewmodel.MainViewModel
+import com.terabyte.mediastorage.viewmodel.LoginViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 class LoginActivity : ComponentActivity() {
-    private lateinit var viewModel: MainViewModel
+    private lateinit var viewModel: LoginViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,13 +53,20 @@ class LoginActivity : ComponentActivity() {
         viewModel = ViewModelProvider(
             this,
             ViewModelProvider.AndroidViewModelFactory.getInstance(application)
-        )[MainViewModel::class]
+        )[LoginViewModel::class]
 
         enableEdgeToEdge()
         setContent {
+            val snackBarHostState = remember { SnackbarHostState() }
+            val coroutineScope = rememberCoroutineScope()
             MediaStorageTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    LoginContent()
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    snackbarHost = {
+                        SnackbarHost(snackBarHostState)
+                    }
+                ) { innerPadding ->
+                    LoginContent(snackBarHostState, coroutineScope)
                 }
             }
         }
@@ -173,7 +187,7 @@ class LoginActivity : ComponentActivity() {
     }
 
     @Composable
-    fun LoginContent() {
+    fun LoginContent(snackbarHostState: SnackbarHostState, coroutineScope: CoroutineScope) {
         ConstraintLayout(
             modifier = Modifier
                 .fillMaxSize()
@@ -212,7 +226,17 @@ class LoginActivity : ComponentActivity() {
 
             Button(
                 onClick = {
-                    startMainActivity()
+                    viewModel.login(
+                        {
+                            startMainActivity()
+                        },
+                        {
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Unable to log in. Try your Internet connection")
+                            }
+                        }
+                    )
+
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.White

@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.jetbrains.kotlin.kapt)
+    alias(libs.plugins.google.ksp)
 }
 
 android {
@@ -51,6 +52,10 @@ android {
 }
 
 dependencies {
+    //moshi
+    implementation(libs.moshi)
+    ksp(libs.moshi.codegen)
+
     //navigation
     implementation(libs.androidx.navigation.compose)
 
