@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
@@ -106,13 +108,18 @@ fun Photos() {
             Text(text = "Memory usage: ")
         }
         LazyVerticalGrid(
+
             columns = GridCells.Fixed(3),
             modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxSize()
         ) {
-            items(20) {
+            items(100) {
                 Box(
                     modifier = Modifier
-                        .padding(16.dp)
+                        .height(100.dp)
+                        .width(100.dp)
+                        .padding(8.dp)
                         .background(Color.Green)
                 )
             }

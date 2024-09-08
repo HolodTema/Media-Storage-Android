@@ -52,6 +52,13 @@ android {
 }
 
 dependencies {
+    //chucker to debug https requests from retrofit
+    debugImplementation(libs.chucker)
+    releaseImplementation(libs.chucker.release)
+
+    //preferences datastore to keep important user data in the phone memory
+    implementation(libs.androidx.datastore.preferences)
+
     //moshi
     implementation(libs.moshi)
     ksp(libs.moshi.codegen)
@@ -66,8 +73,10 @@ dependencies {
     //timber for smart logging
     implementation(libs.timber)
     
-    //retrofit
+    //retrofit with moshi json converter
     implementation(libs.squareup.retrofit)
+    implementation(libs.squareup.retrofit.moshi.converter)
+    implementation("com.squareup.retrofit2:converter-gson:2.5.0")
 
     //constraintLayout in Compose
     implementation(libs.androidx.constraintLayout)

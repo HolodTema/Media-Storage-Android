@@ -15,9 +15,15 @@ dagger = "2.46.1"
 navigationCompose = "2.7.7"
 moshi = "1.15.1"
 ksp = "1.6.10-1.0.4"
+datastore = "1.1.1"
+chucker = "4.0.0"
 
 [libraries]
-moshi = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi"}
+chucker = { group = "com.github.chuckerteam.chucker", name = "library", version.ref = "chucker" }
+chucker-release = { group = "com.github.chuckerteam.chucker", name = "library-no-op", version.ref = "chucker" }
+squareup-retrofit-moshi-converter = { group = "com.squareup.retrofit2", name = "converter-moshi", version.ref = "retrofit" }
+androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+moshi = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
 moshi-codegen = { group = "com.squareup.moshi", name = "moshi-kotlin-codegen", version.ref = "moshi" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }

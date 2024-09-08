@@ -232,7 +232,7 @@ class LoginActivity : ComponentActivity() {
                         },
                         {
                             coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Unable to log in. Try your Internet connection")
+                                snackbarHostState.showSnackbar("Unable to log in. Check your Internet connection")
                             }
                         }
                     )
