@@ -1,6 +1,5 @@
 package com.terabyte.mediastorage.retrofit
 
-import com.terabyte.mediastorage.json.AuthJson
 import com.terabyte.mediastorage.json.AuthResponseJson
 import okhttp3.RequestBody
 import retrofit2.Call

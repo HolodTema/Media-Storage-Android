@@ -25,18 +25,21 @@ class LoginViewModel(private val application: Application): AndroidViewModel(app
         }
     }
 
-    fun login(successListener: () -> Unit, failureListener: () -> Unit) {
+    fun login(successListener: () -> Unit, incorrectLoginListener: () -> Unit, failureListener: () -> Unit) {
         RetrofitManager.auth(
             application.applicationContext,
             stateLogin.value,
             statePassword.value,
-            { authResponse ->
+            successListener = { authResponse ->
                 DataStoreManager.saveToDataStore(application.applicationContext, DataStoreManager.Keys.LOGIN, stateLogin.value)
                 DataStoreManager.saveToDataStore(application.applicationContext, DataStoreManager.Keys.PASSWORD, statePassword.value)
                 DataStoreManager.saveToDataStore(application.applicationContext, DataStoreManager.Keys.ACCESS_TOKEN, authResponse.accessToken)
                 successListener()
             },
-            {
+            incorrectLoginListener = {
+                incorrectLoginListener()
+            },
+            failureListener = {
                 failureListener()
             }
         )

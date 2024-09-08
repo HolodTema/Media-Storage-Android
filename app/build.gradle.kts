@@ -76,7 +76,6 @@ dependencies {
     //retrofit with moshi json converter
     implementation(libs.squareup.retrofit)
     implementation(libs.squareup.retrofit.moshi.converter)
-    implementation("com.squareup.retrofit2:converter-gson:2.5.0")
 
     //constraintLayout in Compose
     implementation(libs.androidx.constraintLayout)

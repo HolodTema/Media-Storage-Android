@@ -81,7 +81,7 @@ class LoginActivity : ComponentActivity() {
                 .fillMaxWidth(0.8f)
         ) {
             Text(
-                text = "Login:",
+                text = "Email:",
                 color = Color.White,
                 fontSize = 18.sp,
             )
@@ -227,12 +227,17 @@ class LoginActivity : ComponentActivity() {
             Button(
                 onClick = {
                     viewModel.login(
-                        {
+                        successListener = {
                             startMainActivity()
                         },
-                        {
+                        incorrectLoginListener = {
                             coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Unable to log in. Check your Internet connection")
+                                snackbarHostState.showSnackbar("Incorrect email or password.")
+                            }
+                        },
+                        failureListener = {
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Unable to sign in. Check your Internet connection")
                             }
                         }
                     )
@@ -248,7 +253,7 @@ class LoginActivity : ComponentActivity() {
                         centerHorizontallyTo(parent)
                     }
             ) {
-                Text(text = "Login!", color = Orange)
+                Text(text = "Sign in!", color = Orange)
             }
 
         }
@@ -256,6 +261,7 @@ class LoginActivity : ComponentActivity() {
 
     private fun startMainActivity() {
         val intent = Intent(this, MainActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         startActivity(intent)
     }
 }

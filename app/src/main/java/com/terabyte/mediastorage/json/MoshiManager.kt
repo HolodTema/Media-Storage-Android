@@ -13,10 +13,5 @@ object MoshiManager {
         .addLast(KotlinJsonAdapterFactory())
         .build()
 
-    fun convertAuthToJson(auth: AuthJson, listener: (String) -> Unit) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val adapter: JsonAdapter<AuthJson> = moshi.adapter(AuthJson::class.java)
-            listener(adapter.toJson(auth))
-        }
-    }
+
 }
