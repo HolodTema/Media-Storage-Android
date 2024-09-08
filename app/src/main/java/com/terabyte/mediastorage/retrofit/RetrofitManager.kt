@@ -25,12 +25,8 @@ object RetrofitManager {
             object: Callback<AuthResponseJson> {
                 override fun onResponse(p0: Call<AuthResponseJson>, p1: Response<AuthResponseJson>) {
                     if(p1.body()==null) {
-                        if(p1.code()==400) {
-                            incorrectLoginListener()
-                        }
-                        else {
-                            failureListener()
-                        }
+                        if(p1.code()==400) incorrectLoginListener()
+                        else failureListener()
                     }
                     else {
                         successListener(p1.body()!!)
@@ -47,9 +43,7 @@ object RetrofitManager {
     private fun createClient(context: Context) {
         client = Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .addConverterFactory(
-                MoshiConverterFactory.create(MoshiManager.moshi)
-            )
+            .addConverterFactory(MoshiConverterFactory.create(MoshiManager.moshi))
             .client(
                 OkHttpClient.Builder()
                     .addInterceptor(ChuckerInterceptor(context))

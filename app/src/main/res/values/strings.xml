@@ -1,5 +1,4 @@
 <resources>
     <string name="app_name">MediaStorage</string>
     <string name="title_activity_main">MainActivity</string>
-    <string name="title_activity_start_wait">StartWaitActivity</string>
 </resources>

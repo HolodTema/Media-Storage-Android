@@ -3,7 +3,6 @@ package com.terabyte.mediastorage.viewmodel
 import android.app.Application
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
-import com.terabyte.mediastorage.TOKEN
 import com.terabyte.mediastorage.retrofit.RetrofitManager
 import com.terabyte.mediastorage.util.DataStoreManager
 
@@ -31,9 +30,8 @@ class LoginViewModel(private val application: Application): AndroidViewModel(app
             stateLogin.value,
             statePassword.value,
             successListener = { authResponse ->
-                DataStoreManager.saveToDataStore(application.applicationContext, DataStoreManager.Keys.LOGIN, stateLogin.value)
-                DataStoreManager.saveToDataStore(application.applicationContext, DataStoreManager.Keys.PASSWORD, statePassword.value)
-                DataStoreManager.saveToDataStore(application.applicationContext, DataStoreManager.Keys.ACCESS_TOKEN, authResponse.accessToken)
+                rememberAccessTokenInDataStore(authResponse.accessToken)
+                rememberSuccessLoginInDataStore()
                 successListener()
             },
             incorrectLoginListener = {
@@ -46,6 +44,11 @@ class LoginViewModel(private val application: Application): AndroidViewModel(app
     }
 
     private fun rememberSuccessLoginInDataStore() {
-        TODO("Not yet implemented")
+        DataStoreManager.saveToDataStore(application.applicationContext, DataStoreManager.Keys.LOGIN, stateLogin.value)
+        DataStoreManager.saveToDataStore(application.applicationContext, DataStoreManager.Keys.PASSWORD, statePassword.value)
+    }
+
+    private fun rememberAccessTokenInDataStore(accessToken: String) {
+        DataStoreManager.saveToDataStore(application.applicationContext, DataStoreManager.Keys.ACCESS_TOKEN, accessToken)
     }
 }

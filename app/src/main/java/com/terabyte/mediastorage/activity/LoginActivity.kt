@@ -16,7 +16,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -253,7 +252,7 @@ class LoginActivity : ComponentActivity() {
                         centerHorizontallyTo(parent)
                     }
             ) {
-                Text(text = "Sign in!", color = Orange)
+                Text(text = "Login!", color = Orange)
             }
 
         }
@@ -261,7 +260,6 @@ class LoginActivity : ComponentActivity() {
 
     private fun startMainActivity() {
         val intent = Intent(this, MainActivity::class.java)
-            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         startActivity(intent)
     }
 }
