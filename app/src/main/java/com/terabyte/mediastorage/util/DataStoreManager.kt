@@ -27,10 +27,7 @@ object DataStoreManager {
     fun <T> readFromDataStore(context: Context, key: Preferences.Key<T>, listener: (T?) -> Unit) {
         CoroutineScope(Dispatchers.Main).launch {
             val deferred = async(Dispatchers.IO) {
-                val preferences = context.dataStore.data.first {
-                    it.contains(key)
-                }
-                preferences[key]
+                context.dataStore.data.first()[key]
             }
             listener(deferred.await())
         }

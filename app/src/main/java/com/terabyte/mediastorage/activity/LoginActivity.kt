@@ -260,6 +260,7 @@ class LoginActivity : ComponentActivity() {
 
     private fun startMainActivity() {
         val intent = Intent(this, MainActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         startActivity(intent)
     }
 }
