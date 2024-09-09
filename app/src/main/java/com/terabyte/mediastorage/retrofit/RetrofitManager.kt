@@ -3,8 +3,10 @@ package com.terabyte.mediastorage.retrofit
 import android.content.Context
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.terabyte.mediastorage.BASE_URL
+import com.terabyte.mediastorage.TOKEN_TYPE
 import com.terabyte.mediastorage.json.AuthResponseJson
 import com.terabyte.mediastorage.json.MoshiManager
+import com.terabyte.mediastorage.json.UserJson
 import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Callback
@@ -39,6 +41,45 @@ object RetrofitManager {
             }
         )
     }
+
+    fun logout(context: Context, accessToken: String, successListener: () -> Unit, failureListener: () -> Unit) {
+        if(!::client.isInitialized) createClient(context)
+
+        val service = client.create(LogoutService::class.java)
+        val call = service.login("$TOKEN_TYPE $accessToken")
+        call.enqueue(
+            object: Callback<Unit> {
+                override fun onResponse(p0: Call<Unit>, p1: Response<Unit>) {
+                    successListener()
+                }
+
+                override fun onFailure(p0: Call<Unit>, p1: Throwable) {
+                    failureListener()
+                }
+            }
+        )
+    }
+
+    fun getCurrentUser(context: Context, accessToken: String, successListener: (UserJson) -> Unit, unauthorizedListener: () -> Unit, failureListener: () -> Unit) {
+        if(!::client.isInitialized) createClient(context)
+
+        val service = client.create(CurrentUserService::class.java)
+        val call = service.getCurrentUser("$TOKEN_TYPE $accessToken")
+        call.enqueue(object: Callback<UserJson> {
+            override fun onResponse(p0: Call<UserJson>, p1: Response<UserJson>) {
+                if(p1.body()==null) {
+                    if(p1.code()==401) unauthorizedListener()
+                    else failureListener()
+                }
+                else successListener(p1.body()!!)
+            }
+
+            override fun onFailure(p0: Call<UserJson>, p1: Throwable) {
+                failureListener()
+            }
+        })
+    }
+
 
     private fun createClient(context: Context) {
         client = Retrofit.Builder()

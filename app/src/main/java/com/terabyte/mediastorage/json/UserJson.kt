@@ -1,8 +1,13 @@
 package com.terabyte.mediastorage.json
 
+import com.squareup.moshi.JsonClass
+
+@JsonClass(generateAdapter = true)
 data class UserJson(
+    val email: String,
     val id: Int,
-    val name: String,
-    val items: List<UserJson>,
-    val password: String
+    val is_active: Boolean,
+    val is_superuser: Boolean,
+    val is_verified: Boolean,
+    val name: String
 )

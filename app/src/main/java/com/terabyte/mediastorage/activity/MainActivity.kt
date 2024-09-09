@@ -1,8 +1,6 @@
 package com.terabyte.mediastorage.activity
 
-import android.accounts.Account
 import android.os.Bundle
-import android.provider.Contacts
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -23,6 +21,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -34,8 +34,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -44,50 +47,90 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.terabyte.mediastorage.activity.ui.theme.MediaStorageTheme
+import com.terabyte.mediastorage.ui.theme.Orange
+import com.terabyte.mediastorage.viewmodel.MainViewModel
 
 class MainActivity : ComponentActivity() {
+    private lateinit var viewModel: MainViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            viewModel = ViewModelProvider(
+                this,
+                ViewModelProvider.AndroidViewModelFactory.getInstance(application)
+            )[MainViewModel::class]
             val navController = rememberNavController()
 
             MediaStorageTheme {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
-                        BottomNavigationBar(navController)
+                        if(!viewModel.stateFailureRequest.value) {
+                            BottomNavigationBar(navController)
+                        }
                     }
                 ) { innerPadding ->
-                    MainContent(navController, innerPadding)
+                    MainContent(viewModel, navController, innerPadding)
                 }
             }
         }
     }
 }
 
-
 @Composable
-fun MainContent(navController: NavHostController, paddingValues: PaddingValues) {
-    Column(
-        modifier = Modifier
-            .padding(top = paddingValues.calculateTopPadding())
+fun MainContent(viewModel: MainViewModel, navController: NavHostController, paddingValues: PaddingValues) {
+    if(viewModel.stateFailureRequest.value) {
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp)
         ) {
-        NavHost(navController, startDestination = "account") {
-            composable(Routes.Account.route) {
-                Account()
-            }
-            composable(Routes.Photos.route) {
-                Photos()
-            }
-            composable(Routes.Videos.route) {
-                Videos()
+            Text(
+                textAlign = TextAlign.Center,
+                text = "Something went wrong.\nCheck your Internet connection."
+            )
+            Button(
+                modifier = Modifier
+                    .padding(top = 8.dp),
+                onClick = {
+                    viewModel.getUserInfo()
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Orange
+                )
+            ) {
+                Text(
+                    text = "Try again",
+                )
             }
         }
+    }
+    else {
+        Column(
+            modifier = Modifier
+                .padding(top = paddingValues.calculateTopPadding())
+        ) {
+            NavHost(navController, startDestination = "account") {
+                composable(Routes.Account.route) {
+                    Account(viewModel)
+                }
+                composable(Routes.Photos.route) {
+                    Photos()
+                }
+                composable(Routes.Videos.route) {
+                    Videos()
+                }
+            }
 
+        }
     }
 
 }
+
 
 @Composable
 fun Videos() {
@@ -128,7 +171,45 @@ fun Photos() {
 }
 
 @Composable
-fun Account() {
+fun Account(viewModel: MainViewModel) {
+    
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+        ) {
+            Text(
+                text = "User",
+                fontSize = 30.sp,
+                modifier = Modifier
+                    .padding(start = 8.dp)
+            )
+            Button(
+                onClick = {
+                    viewModel.logout()
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Orange
+                )
+            ) {
+                Text(text = "Sign out")
+            }
+        }
+        Text(
+            text = "Email: user@example.com",
+            modifier = Modifier
+                .padding(top = 16.dp, start = 16.dp),
+            fontSize = 18.sp
+        )
+    }
+
+
 }
 
 @Composable

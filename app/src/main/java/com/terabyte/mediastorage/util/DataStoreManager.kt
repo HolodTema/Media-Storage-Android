@@ -34,6 +34,14 @@ object DataStoreManager {
 
     }
 
+    fun <T> deleteFromDataStore(context: Context, key: Preferences.Key<T>) {
+        CoroutineScope(Dispatchers.IO).launch {
+            context.dataStore.edit {
+                it.minusAssign(key)
+            }
+        }
+    }
+
     object Keys {
         val LOGIN = stringPreferencesKey("login")
         val PASSWORD = stringPreferencesKey("password")
