@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Call
@@ -26,6 +27,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,8 +36,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
@@ -46,6 +48,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.terabyte.mediastorage.R
 import com.terabyte.mediastorage.activity.ui.theme.MediaStorageTheme
 import com.terabyte.mediastorage.ui.theme.Orange
 import com.terabyte.mediastorage.viewmodel.MainViewModel
@@ -119,7 +122,7 @@ fun MainContent(viewModel: MainViewModel, navController: NavHostController, padd
                     Account(viewModel)
                 }
                 composable(Routes.Photos.route) {
-                    Photos()
+                    Photos(viewModel)
                 }
                 composable(Routes.Videos.route) {
                     Videos()
@@ -136,34 +139,56 @@ fun MainContent(viewModel: MainViewModel, navController: NavHostController, padd
 fun Videos() {
 }
 
-@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun Photos() {
+fun Photos(viewModel: MainViewModel) {
     Column() {
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .padding(top = 8.dp, bottom = 8.dp, start = 8.dp, end = 8.dp)
                 .fillMaxWidth()
+                .padding(top = 16.dp, bottom = 8.dp, start = 8.dp, end = 8.dp)
         ) {
-            Text(text = "Amount photos: ")
+            Text(text = "Amount photos: ${viewModel.stateItems.value?.size ?: 0}")
             Text(text = "Memory usage: ")
         }
-        LazyVerticalGrid(
+        if(viewModel.stateItems.value!=null) {
+            LazyVerticalGrid(
 
-            columns = GridCells.Fixed(3),
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxSize()
-        ) {
-            items(100) {
-                Box(
-                    modifier = Modifier
-                        .height(100.dp)
-                        .width(100.dp)
-                        .padding(8.dp)
-                        .background(Color.Green)
+                columns = GridCells.Fixed(3),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxSize()
+            ) {
+                items(viewModel.stateItems.value!!) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(painter = painterResource(
+                            id = R.drawable.ic_launcher_background),
+                            contentDescription = "photo",
+                            modifier = Modifier
+                                .height(150.dp)
+                                .width(150.dp)
+                                .padding(16.dp)
+                        )
+                        Text(
+                            text = it.filename,
+                            modifier = Modifier
+                                .padding(top = 4.dp)
+                        )
+                    }
+                }
+            }
+        }
+        else {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No photos."
                 )
             }
         }
@@ -182,7 +207,7 @@ fun Account(viewModel: MainViewModel) {
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp)
+                .padding(top = 16.dp, start = 8.dp, end = 8.dp, bottom = 8.dp)
         ) {
             Text(
                 text = "User",
@@ -214,7 +239,9 @@ fun Account(viewModel: MainViewModel) {
 
 @Composable
 fun BottomNavigationBar(navController: NavController) {
-    NavigationBar {
+    NavigationBar(
+        containerColor = Orange
+    ) {
         val backStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = backStackEntry?.destination?.route
 
@@ -239,6 +266,15 @@ fun BottomNavigationBar(navController: NavController) {
         navBarItems.forEach { navItem ->
             NavigationBarItem(
                 selected = currentRoute == navItem.route,
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = Color.Black,
+                    selectedTextColor = Color.White,
+                    indicatorColor = Color.White,
+                    unselectedIconColor = Color.White,
+                    unselectedTextColor = Color.White,
+                    disabledIconColor = Color.White,
+                    disabledTextColor = Color.White
+                ),
                 onClick = {
                     navController.navigate(navItem.route) {
                         popUpTo(navController.graph.findStartDestination().id) {saveState = true}

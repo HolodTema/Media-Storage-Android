@@ -5,6 +5,7 @@ import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.terabyte.mediastorage.BASE_URL
 import com.terabyte.mediastorage.TOKEN_TYPE
 import com.terabyte.mediastorage.json.AuthResponseJson
+import com.terabyte.mediastorage.json.ItemJson
 import com.terabyte.mediastorage.json.MoshiManager
 import com.terabyte.mediastorage.json.UserJson
 import okhttp3.OkHttpClient
@@ -78,6 +79,29 @@ object RetrofitManager {
                 failureListener()
             }
         })
+    }
+
+
+    fun getAllItems(context: Context, accessToken: String, successListener: (List<ItemJson>) -> Unit, unauthorizedListener: () -> Unit, failureListener: () -> Unit) {
+        if(!::client.isInitialized) createClient(context)
+
+        val service = client.create(GetAllItemsService::class.java)
+        val call = service.getAllItems("$TOKEN_TYPE $accessToken")
+        call.enqueue(
+            object: Callback<List<ItemJson>> {
+                override fun onResponse(p0: Call<List<ItemJson>>, p1: Response<List<ItemJson>>) {
+                    if(p1.body()==null) {
+                        if(p1.code()==401) unauthorizedListener()
+                        else failureListener()
+                    }
+                    else successListener(p1.body()!!)
+                }
+
+                override fun onFailure(p0: Call<List<ItemJson>>, p1: Throwable) {
+                    failureListener()
+                }
+            }
+        )
     }
 
 
