@@ -17,6 +17,8 @@
         android:theme="@style/Theme.MediaStorage"
         tools:targetApi="31">
         <activity
+            android:configChanges="orientation"
+            android:noHistory="true"
             android:name=".activity.StartWaitActivity"
             android:exported="true"
             android:label="@string/title_activity_start_wait"
