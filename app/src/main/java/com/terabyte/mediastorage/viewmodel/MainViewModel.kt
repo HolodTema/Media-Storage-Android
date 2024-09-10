@@ -3,8 +3,11 @@ package com.terabyte.mediastorage.viewmodel
 import android.app.Application
 import android.content.Intent
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.AndroidViewModel
 import com.terabyte.mediastorage.activity.LoginActivity
+import com.terabyte.mediastorage.activity.PhotoInfoActivity
+import com.terabyte.mediastorage.json.ItemJson
 import com.terabyte.mediastorage.model.ItemModel
 import com.terabyte.mediastorage.retrofit.RetrofitManager
 import com.terabyte.mediastorage.util.BitmapConverter
@@ -14,7 +17,8 @@ class MainViewModel(private val application: Application): AndroidViewModel(appl
     val stateUsername = mutableStateOf("")
     val stateEmail = mutableStateOf("")
     val stateFailureRequest = mutableStateOf(false)
-    val stateItems = mutableStateOf<List<ItemModel>?>(null)
+    val stateItems = mutableStateOf<ArrayList<ItemModel>?>(null)
+    val stateAmountItems = mutableStateOf(0)
 
     init {
         initRequests()
@@ -59,9 +63,8 @@ class MainViewModel(private val application: Application): AndroidViewModel(appl
                     application.applicationContext,
                     token,
                     successListener = { itemJsonList ->
-                        BitmapConverter.itemJsonToItemModel(application.applicationContext, itemJsonList) { itemModelList ->
-                            stateItems.value = itemModelList
-                        }
+                        stateAmountItems.value = itemJsonList.size
+                        getItemsData(token, itemJsonList)
                     },
                     unauthorizedListener = {
                         startLoginActivity(token)
@@ -71,6 +74,32 @@ class MainViewModel(private val application: Application): AndroidViewModel(appl
                     }
                 )
             }
+        }
+    }
+
+    fun getItemsData(accessToken: String, itemJsonList: List<ItemJson>) {
+        itemJsonList.forEach { itemJson ->
+            RetrofitManager.getItem(
+                application.applicationContext,
+                accessToken,
+                itemJson.id,
+                successListener = { bytes ->
+                    itemJsonToItemModel(itemJson, bytes)
+                },
+                unauthorizedListener = {
+                    startLoginActivity(accessToken)
+                },
+                failureListener = {
+                    stateFailureRequest.value = true
+                }
+            )
+        }
+    }
+
+    fun itemJsonToItemModel(itemJson: ItemJson, bytes: ByteArray) {
+        BitmapConverter.itemJsonToItemModel(application.applicationContext, itemJson, bytes) {
+            if(stateItems.value==null) stateItems.value = arrayListOf(it)
+            else stateItems.value!!.add(it)
         }
     }
 
@@ -101,6 +130,11 @@ class MainViewModel(private val application: Application): AndroidViewModel(appl
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         )
+    }
+
+    fun startPhotoInfoActivity() {
+        val intent = Intent(application.applicationContext, PhotoInfoActivity::class.java)
+        startActivity(application.applicationContext, intent, null)
     }
 
 }

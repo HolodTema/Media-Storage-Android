@@ -8,7 +8,12 @@ import com.terabyte.mediastorage.json.AuthResponseJson
 import com.terabyte.mediastorage.json.ItemJson
 import com.terabyte.mediastorage.json.MoshiManager
 import com.terabyte.mediastorage.json.UserJson
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -104,6 +109,34 @@ object RetrofitManager {
         )
     }
 
+    fun getItem(context: Context, accessToken: String, itemId: String, successListener: (ByteArray) -> Unit, unauthorizedListener: () -> Unit, failureListener: () -> Unit) {
+        if(!::client.isInitialized) createClient(context)
+
+        val service = client.create(GetItemService::class.java)
+        val call = service.getAllItems("$TOKEN_TYPE $accessToken", itemId)
+        call.enqueue(
+            object: Callback<ResponseBody> {
+                override fun onResponse(p0: Call<ResponseBody>, p1: Response<ResponseBody>) {
+                    if(p1.body()==null) {
+                        if(p1.code()==401) unauthorizedListener()
+                        else failureListener()
+                    }
+                    else {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            val deferred = async(Dispatchers.IO) {
+                                p1.body()!!.bytes()
+                            }
+                            successListener(deferred.await())
+                        }
+                    }
+                }
+
+                override fun onFailure(p0: Call<ResponseBody>, p1: Throwable) {
+                    failureListener()
+                }
+            }
+        )
+    }
 
     private fun createClient(context: Context) {
         client = Retrofit.Builder()

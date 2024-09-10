@@ -21,7 +21,7 @@
             android:noHistory="true"
             android:name=".activity.StartWaitActivity"
             android:exported="true"
-            android:label="@string/title_activity_start_wait"
+            android:label="@string/app_name"
             android:theme="@style/Theme.MediaStorage">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -32,7 +32,7 @@
         <activity
             android:name=".activity.MainActivity"
             android:exported="false"
-            android:label="@string/title_activity_main"
+            android:label="@string/app_name"
             android:theme="@style/Theme.MediaStorage"></activity>
         <activity
             android:name=".activity.LoginActivity"
@@ -40,6 +40,13 @@
             android:label="@string/app_name"
             android:theme="@style/Theme.MediaStorage">
         </activity>
+        <activity
+            android:name=".activity.PhotoInfoActivity"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.MediaStorage">
+        </activity>
     </application>
+
 
 </manifest>
