@@ -1,50 +1,56 @@
 package com.terabyte.mediastorage.util
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
-import com.terabyte.mediastorage.R
 
 
-@Preview
 @Composable
-fun ImageZoom() {
+fun ImageZoom(
+    modifier: Modifier,
+    bitmap: ImageBitmap
+) {
     val MAX_ZOOM = 4f
-    var scale = remember {
+    val scale = remember {
         mutableFloatStateOf(1f)
+    }
+    val offset = remember {
+        mutableStateOf(Offset.Zero)
+    }
+    val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
+        if(scale.floatValue*zoomChange in 1f..3f) scale.floatValue *=zoomChange
+        offset.value += offsetChange
+
     }
 
     Box(
         modifier = Modifier
-            .fillMaxSize()
-            .pointerInput(Unit) {
-                detectTransformGestures { centroid, pan, zoom, rotation ->
-                    if(scale.value*zoom<=MAX_ZOOM)
-                    scale.value *= zoom
-
-                }
-            }
+            .then(modifier)
     ) {
         Image(
-            painter = painterResource(id = R.drawable.ic_launcher_background),
+            bitmap = bitmap,
             contentDescription = "image",
             modifier = Modifier
                 .fillMaxSize()
                 .align(Alignment.Center)
-                .graphicsLayer(
-                    scaleX = maxOf(1f, minOf(3f, scale.value)),
-                    scaleY = maxOf(1f, minOf(3f, scale.value)),
-                ),
+                .graphicsLayer {
+                    scaleX = scale.floatValue
+                    scaleY = scale.floatValue
+                    translationX = offset.value.x
+                    translationY = offset.value.y
+                }
+                .transformable(state)
 
         )
     }

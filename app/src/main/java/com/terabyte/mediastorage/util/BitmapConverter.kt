@@ -20,6 +20,7 @@ object BitmapConverter {
                     itemJson.ownerId,
                     itemJson.name,
                     itemJson.filename,
+                    bytes,
                     BitmapFactory.decodeByteArray(bytes, 0, bytes.size).asImageBitmap()
                 )
             }

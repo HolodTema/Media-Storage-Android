@@ -1,9 +1,9 @@
 package com.terabyte.mediastorage.activity
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -15,9 +15,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.ViewModelProvider
+import com.terabyte.mediastorage.INTENT_ITEM_MODEL
 import com.terabyte.mediastorage.R
+import com.terabyte.mediastorage.model.ItemModel
 import com.terabyte.mediastorage.ui.theme.MediaStorageTheme
 import com.terabyte.mediastorage.ui.theme.Orange
+import com.terabyte.mediastorage.util.ImageZoom
 import com.terabyte.mediastorage.viewmodel.PhotoInfoViewModel
 
 class PhotoInfoActivity: ComponentActivity() {
@@ -26,10 +29,20 @@ class PhotoInfoActivity: ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+
             viewModel = ViewModelProvider(
                 this,
                 ViewModelProvider.AndroidViewModelFactory.getInstance(application)
             )[PhotoInfoViewModel::class.java]
+
+            if(intent!=null && intent.extras!=null && intent.extras!!.containsKey(INTENT_ITEM_MODEL)) {
+                val itemModel = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    intent.extras!!.getParcelable(INTENT_ITEM_MODEL, ItemModel::class.java)
+                } else {
+                    intent.extras!!.getParcelable<ItemModel>(INTENT_ITEM_MODEL)
+                }
+                viewModel.stateItemModel.value = itemModel
+            }
             MediaStorageTheme {
                 PhotoInfoContent()
             }
@@ -44,18 +57,19 @@ class PhotoInfoActivity: ComponentActivity() {
         ) {
             val image = createRef()
             val buttonBack = createRef()
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher_background),
-                modifier = Modifier
-                    .constrainAs(image) {
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
-                        top.linkTo(parent.top)
-                        bottom.linkTo(parent.bottom)
-                    }
-                    .fillMaxSize(),
-                contentDescription = "photo"
-            )
+            if(viewModel.stateItemModel.value!=null) {
+                ImageZoom(
+                    bitmap = viewModel.stateItemModel.value!!.image,
+                    modifier = Modifier
+                        .constrainAs(image) {
+                            start.linkTo(parent.start)
+                            end.linkTo(parent.end)
+                            top.linkTo(parent.top)
+                            bottom.linkTo(parent.bottom)
+                        }
+                        .fillMaxSize(),
+                )
+            }
             IconButton(
                 onClick = {
                     finish()

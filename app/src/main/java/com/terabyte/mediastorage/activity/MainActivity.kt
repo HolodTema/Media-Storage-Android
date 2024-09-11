@@ -6,12 +6,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,13 +22,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -39,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
@@ -49,9 +53,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.terabyte.mediastorage.INTENT_ITEM_MODEL
 import com.terabyte.mediastorage.activity.ui.theme.MediaStorageTheme
+import com.terabyte.mediastorage.model.ItemModel
 import com.terabyte.mediastorage.ui.theme.Orange
 import com.terabyte.mediastorage.viewmodel.MainViewModel
+
 
 class MainActivity : ComponentActivity() {
     private lateinit var viewModel: MainViewModel
@@ -115,7 +122,11 @@ class MainActivity : ComponentActivity() {
         else {
             Column(
                 modifier = Modifier
-                    .padding(top = paddingValues.calculateTopPadding())
+                    .padding(
+                        top = paddingValues.calculateTopPadding(),
+                        start = paddingValues.calculateStartPadding(LayoutDirection.Ltr),
+                        end = paddingValues.calculateEndPadding(LayoutDirection.Ltr),
+                        bottom = paddingValues.calculateBottomPadding())
             ) {
                 NavHost(navController, startDestination = "account") {
                     composable(Routes.Account.route) {
@@ -189,9 +200,9 @@ class MainActivity : ComponentActivity() {
                     .padding(top = 16.dp, bottom = 8.dp, start = 8.dp, end = 8.dp)
             ) {
                 Text(text = "Amount photos: ${viewModel.stateAmountItems.value}")
-                Text(text = "Memory usage: ")
+                Text(text = "Memory usage: ${viewModel.stateMemoryUsage.value}")
             }
-            if(viewModel.stateItems.value!=null) {
+            if(viewModel.stateAmountItems.value!=0) {
                 LazyVerticalGrid(
 
                     columns = GridCells.Fixed(3),
@@ -199,25 +210,47 @@ class MainActivity : ComponentActivity() {
                         .fillMaxWidth()
                         .fillMaxSize()
                 ) {
-                    items(viewModel.stateItems.value!!) {
+                    items(viewModel.stateAmountItems.value) { n ->
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Image(bitmap = it.image,
-                                contentDescription = "photo",
-                                modifier = Modifier
-                                    .height(150.dp)
-                                    .width(150.dp)
-                                    .padding(16.dp)
-                                    .clickable {
-                                        startPhotoInfoActivity()
-                                    }
-                            )
-                            Text(
-                                text = it.filename,
-                                modifier = Modifier
-                                    .padding(top = 4.dp)
-                            )
+                            if(viewModel.stateItems.value!=null && viewModel.stateItems.value!!.size>n) {
+                                val itemModel = viewModel.stateItems.value!![n]
+                                Image(bitmap = itemModel.image,
+                                    contentDescription = "photo",
+                                    modifier = Modifier
+                                        .height(150.dp)
+                                        .width(150.dp)
+                                        .padding(top = 16.dp, start = 8.dp, end = 8.dp)
+                                        .clickable {
+                                            startPhotoInfoActivity(itemModel)
+                                        }
+                                )
+                                Text(
+                                    text = itemModel.filename,
+                                    modifier = Modifier
+                                        .padding(top = 8.dp)
+                                )
+                            }
+                            else {
+                                Box(
+                                    modifier = Modifier
+                                        .height(150.dp)
+                                        .width(150.dp)
+                                        .padding(16.dp)
+                                        .background(Color.White),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        color = Orange,
+                                        modifier = Modifier
+                                            .width(40.dp)
+                                            .height(40.dp)
+                                    )
+                                }
+                            }
+
+
                         }
                     }
                 }
@@ -301,8 +334,9 @@ class MainActivity : ComponentActivity() {
     }
 
 
-    private fun startPhotoInfoActivity() {
+    private fun startPhotoInfoActivity(itemModel: ItemModel) {
         val intent = Intent(this, PhotoInfoActivity::class.java)
+        intent.putExtra(INTENT_ITEM_MODEL, itemModel)
         startActivity(intent)
     }
     data class BarItem(

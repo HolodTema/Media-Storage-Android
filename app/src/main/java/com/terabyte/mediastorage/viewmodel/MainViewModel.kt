@@ -9,16 +9,21 @@ import com.terabyte.mediastorage.activity.LoginActivity
 import com.terabyte.mediastorage.activity.PhotoInfoActivity
 import com.terabyte.mediastorage.json.ItemJson
 import com.terabyte.mediastorage.model.ItemModel
+import com.terabyte.mediastorage.model.MemoryUsageModel
 import com.terabyte.mediastorage.retrofit.RetrofitManager
 import com.terabyte.mediastorage.util.BitmapConverter
 import com.terabyte.mediastorage.util.DataStoreManager
 
 class MainViewModel(private val application: Application): AndroidViewModel(application) {
+    private val memoryUsageModel = MemoryUsageModel()
+
     val stateUsername = mutableStateOf("")
     val stateEmail = mutableStateOf("")
     val stateFailureRequest = mutableStateOf(false)
     val stateItems = mutableStateOf<ArrayList<ItemModel>?>(null)
     val stateAmountItems = mutableStateOf(0)
+    val stateMemoryUsage = mutableStateOf( memoryUsageModel.defaultValue())
+
 
     init {
         initRequests()
@@ -84,6 +89,7 @@ class MainViewModel(private val application: Application): AndroidViewModel(appl
                 accessToken,
                 itemJson.id,
                 successListener = { bytes ->
+                    stateMemoryUsage.value = memoryUsageModel.calculateMemoryUsage(bytes)
                     itemJsonToItemModel(itemJson, bytes)
                 },
                 unauthorizedListener = {
@@ -94,6 +100,10 @@ class MainViewModel(private val application: Application): AndroidViewModel(appl
                 }
             )
         }
+    }
+
+    fun addToMemoryUsageModel(bytes: ByteArray) {
+
     }
 
     fun itemJsonToItemModel(itemJson: ItemJson, bytes: ByteArray) {
