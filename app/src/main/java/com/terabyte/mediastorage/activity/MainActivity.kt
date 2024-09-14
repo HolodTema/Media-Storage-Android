@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
@@ -29,6 +30,7 @@ import androidx.compose.material.icons.filled.Face
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -41,10 +43,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -54,6 +60,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.terabyte.mediastorage.INTENT_ITEM_MODEL
+import com.terabyte.mediastorage.R
 import com.terabyte.mediastorage.activity.ui.theme.MediaStorageTheme
 import com.terabyte.mediastorage.model.ItemModel
 import com.terabyte.mediastorage.ui.theme.Orange
@@ -135,8 +142,8 @@ class MainActivity : ComponentActivity() {
                     composable(Routes.Photos.route) {
                         Photos()
                     }
-                    composable(Routes.Videos.route) {
-                        Videos()
+                    composable(Routes.Uploading.route) {
+                        Uploading()
                     }
                 }
 
@@ -271,7 +278,75 @@ class MainActivity : ComponentActivity() {
 
 
     @Composable
-    fun Videos() {
+    fun Uploading() {
+        ConstraintLayout(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            val buttonUpload = createRef()
+            val lazyColumnUploadHistory = createRef()
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                items(20) {
+                    UploadingHistoryItem()
+                }
+            }
+            FloatingActionButton(
+                containerColor = Orange,
+                onClick = { /*TODO*/ },
+                modifier = Modifier
+                    .constrainAs(buttonUpload) {
+                        bottom.linkTo(parent.bottom)
+                        end.linkTo(parent.end)
+                    }
+                    .padding(16.dp)
+            ) {
+                Icon(
+                    tint = Color.White,
+                    painter = painterResource(id = R.drawable.ic_show_password),
+                    contentDescription = "upload"
+                )
+            }
+        }
+        Box(
+
+        ) {
+
+        }
+    }
+
+    @Preview(showBackground = true, showSystemUi = true)
+    @Composable
+    fun UploadingHistoryItem() {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_launcher_background),
+                contentDescription = "image",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .width(80.dp)
+                    .height(80.dp)
+                )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp)
+            ) {
+                Text(
+                    text = "filename.png",
+                    fontSize = 20.sp,
+                    modifier = Modifier
+                        .padding(end = 16.dp))
+                Text("Uploaded 01.01.2024 09:35")
+            }
+        }
     }
 
     @Composable
@@ -294,9 +369,9 @@ class MainActivity : ComponentActivity() {
                     route = Routes.Photos.route
                 ),
                 BarItem(
-                    title = "Videos",
+                    title = "Uploading",
                     image = Icons.Filled.Call,
-                    route = Routes.Videos.route
+                    route = Routes.Uploading.route
                 )
             )
 
@@ -348,7 +423,7 @@ class MainActivity : ComponentActivity() {
     sealed class Routes(val route: String) {
         object Account: Routes("account")
         object Photos: Routes("photos")
-        object Videos: Routes("videos")
+        object Uploading: Routes("uploading")
     }
 
 }
