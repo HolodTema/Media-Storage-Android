@@ -4,6 +4,8 @@ const val BASE_URL = "http://192.168.31.38:8000"
 
 const val DATA_STORE_NAME = "myDataStore"
 
+const val ROOM_DATABASE_NAME = "appDatabase"
+
 const val TOKEN_TYPE = "Bearer"
 
 
