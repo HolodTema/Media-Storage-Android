@@ -4,15 +4,19 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.ViewModelProvider
 import com.terabyte.mediastorage.INTENT_ITEM_MODEL
@@ -57,6 +61,7 @@ class PhotoInfoActivity: ComponentActivity() {
         ) {
             val image = createRef()
             val buttonBack = createRef()
+            val textFilename = createRef()
             if(viewModel.stateItemModel.value!=null) {
                 ImageZoom(
                     bitmap = viewModel.stateItemModel.value!!.image,
@@ -80,6 +85,7 @@ class PhotoInfoActivity: ComponentActivity() {
                         top.linkTo(parent.top)
                     }
                     .padding(top = 8.dp, end = 8.dp)
+                    .background(Color.Gray)
 
             ) {
                 Icon(
@@ -90,6 +96,20 @@ class PhotoInfoActivity: ComponentActivity() {
                         .size(40.dp)
                 )
             }
+            Text(
+                text = viewModel.stateItemModel.value?.filename ?: "",
+                fontSize = 20.sp,
+                modifier = Modifier
+                    .constrainAs(textFilename) {
+                        top.linkTo(buttonBack.top)
+                        bottom.linkTo(buttonBack.bottom)
+                        end.linkTo(buttonBack.start)
+                        start.linkTo(parent.start)
+                    }
+                    .padding(top = 8.dp)
+                    .background(Color.Gray)
+            )
+
         }
     }
 }

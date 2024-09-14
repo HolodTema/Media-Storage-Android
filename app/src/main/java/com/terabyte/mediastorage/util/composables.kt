@@ -1,5 +1,6 @@
 package com.terabyte.mediastorage.util
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
@@ -22,6 +23,7 @@ fun ImageZoom(
     bitmap: ImageBitmap
 ) {
     val MAX_ZOOM = 4f
+    val MIN_ZOOM = 1f
     val scale = remember {
         mutableFloatStateOf(1f)
     }
@@ -29,8 +31,8 @@ fun ImageZoom(
         mutableStateOf(Offset.Zero)
     }
     val state = rememberTransformableState { zoomChange, offsetChange, rotationChange ->
-        if(scale.floatValue*zoomChange in 1f..3f) scale.floatValue *=zoomChange
-        offset.value += offsetChange
+        if(scale.floatValue*zoomChange in MIN_ZOOM..MAX_ZOOM) scale.floatValue *=zoomChange
+//        offset.value += offsetChange
 
     }
 
@@ -49,6 +51,7 @@ fun ImageZoom(
                     scaleY = scale.floatValue
                     translationX = offset.value.x
                     translationY = offset.value.y
+                    Log.d("myDebug", "${offset.value.x}  ${offset.value.y}")
                 }
                 .transformable(state)
 
