@@ -138,6 +138,31 @@ object RetrofitManager {
         )
     }
 
+    fun uploadItem(context: Context, accessToken: String, name: String, ownerId: Int, successListener: (ItemJson) -> Unit, unauthorizedListener: () -> Unit, failureListener: () -> Unit) {
+        if(!::client.isInitialized) createClient(context)
+        val service = client.create(PostItemService::class.java)
+        val call = service.postItem(accessToken, name, ownerId)
+        call.enqueue(
+            object: Callback<ItemJson> {
+                override fun onResponse(p0: Call<ItemJson>, p1: Response<ItemJson>) {
+                    if(p1.body()==null) {
+                        if(p1.code()==401) unauthorizedListener()
+                        else failureListener()
+                    }
+                    else {
+                        successListener(p1.body()!!)
+                    }
+                }
+
+                override fun onFailure(p0: Call<ItemJson>, p1: Throwable) {
+                    failureListener()
+                }
+            }
+        )
+
+    }
+
+
     private fun createClient(context: Context) {
         client = Retrofit.Builder()
             .baseUrl(BASE_URL)

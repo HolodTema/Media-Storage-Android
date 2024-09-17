@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Call
@@ -46,7 +48,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -61,6 +62,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.terabyte.mediastorage.INTENT_ITEM_MODEL
 import com.terabyte.mediastorage.R
+import com.terabyte.mediastorage.activity.room.UploadingHistoryItem
 import com.terabyte.mediastorage.activity.ui.theme.MediaStorageTheme
 import com.terabyte.mediastorage.model.ItemModel
 import com.terabyte.mediastorage.ui.theme.Orange
@@ -69,6 +71,24 @@ import com.terabyte.mediastorage.viewmodel.MainViewModel
 
 class MainActivity : ComponentActivity() {
     private lateinit var viewModel: MainViewModel
+
+    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if(result.resultCode==RESULT_OK && result.data!=null && result.data?.data!=null)  {
+            val uri = result.data!!.data!!
+            viewModel.uploadImage(
+                uri,
+                successListener = {
+
+                },
+                failureListener = {
+
+                }
+            )
+        }
+        else {
+// TODO: show toast or snackbar
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -285,18 +305,35 @@ class MainActivity : ComponentActivity() {
         ) {
             val buttonUpload = createRef()
             val lazyColumnUploadHistory = createRef()
+            val textNothingUploaded = createRef()
 
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-            ) {
-                items(20) {
-                    UploadingHistoryItem()
+            if(viewModel.stateUploadingHistory.value.isEmpty()) {
+                Text(
+                    text = "Upload your first file!",
+                    modifier = Modifier
+                        .constrainAs(textNothingUploaded) {
+                            top.linkTo(parent.top)
+                            bottom.linkTo(parent.bottom)
+                            end.linkTo(parent.end)
+                            start.linkTo(parent.start)
+                        }
+                )
+            }
+            else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    items(viewModel.stateUploadingHistory.value) { item ->
+                        UploadingHistoryItem(item)
+                    }
                 }
             }
             FloatingActionButton(
                 containerColor = Orange,
-                onClick = { /*TODO*/ },
+                onClick = {
+                    pickImage()
+                },
                 modifier = Modifier
                     .constrainAs(buttonUpload) {
                         bottom.linkTo(parent.bottom)
@@ -318,33 +355,51 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @Preview(showBackground = true, showSystemUi = true)
+    private fun pickImage() {
+        val intent = Intent()
+        intent.setType("image/*")
+        intent.setAction(Intent.ACTION_GET_CONTENT)
+        pickImageLauncher.launch(intent)
+    }
+
     @Composable
-    fun UploadingHistoryItem() {
+    fun UploadingHistoryItem(item: UploadingHistoryItem) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher_background),
-                contentDescription = "image",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .width(80.dp)
-                    .height(80.dp)
+            if(item.image==null) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_launcher_background),
+                    contentDescription = "image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .width(80.dp)
+                        .height(80.dp)
                 )
+            }
+            else {
+                Image(
+                    bitmap = item.image,
+                    contentDescription = "image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .width(80.dp)
+                        .height(80.dp)
+                )
+            }
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 16.dp)
             ) {
                 Text(
-                    text = "filename.png",
+                    text = item.filename,
                     fontSize = 20.sp,
                     modifier = Modifier
                         .padding(end = 16.dp))
-                Text("Uploaded 01.01.2024 09:35")
+                Text("Uploaded ${item.date}")
             }
         }
     }

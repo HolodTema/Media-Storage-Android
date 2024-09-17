@@ -53,8 +53,9 @@ android {
 
 dependencies {
     //room local database
+//    ksp(libs.androidx.room.compiler)
+    kapt(libs.androidx.room.compiler)
     implementation(libs.androidx.room.runtime)
-    ksp(libs.androidx.room.compiler)
 
     //chucker to debug https requests from retrofit
     debugImplementation(libs.chucker)

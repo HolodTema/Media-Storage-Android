@@ -3,6 +3,7 @@ package com.terabyte.mediastorage.activity.room
 import android.content.Context
 import androidx.room.Room
 import com.terabyte.mediastorage.ROOM_DATABASE_NAME
+import com.terabyte.mediastorage.util.BitmapConverter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -17,17 +18,23 @@ object RoomManager {
         }
     }
 
-    private fun getUploadingHistory(context: Context, listener: (List<UploadingHistoryItem>) -> Unit) {
+    fun getUploadingHistory(context: Context, listener: (List<UploadingHistoryItem>) -> Unit) {
         checkInitDatabase(context)
         CoroutineScope(Dispatchers.Main).launch {
             val deferred = async(Dispatchers.IO) {
-                db.getUploadingHistoryDao().getAll()
+                val list = db.getUploadingHistoryDao().getAll()
+                list.map { item ->
+                    BitmapConverter.addBitmapToUploadingHistoryItem(context, item)
+                }
+                list
             }
             listener(deferred.await())
         }
     }
 
-    private fun insertUploadingHistoryItem(context: Context, item: UploadingHistoryItem) {
+
+    fun insertUploadingHistoryItem(context: Context, item: UploadingHistoryItem) {
+        checkInitDatabase(context)
         CoroutineScope(Dispatchers.IO).launch {
             db.getUploadingHistoryDao().insert(item)
         }
