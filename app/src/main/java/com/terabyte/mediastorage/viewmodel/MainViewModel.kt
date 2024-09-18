@@ -3,24 +3,19 @@ package com.terabyte.mediastorage.viewmodel
 import android.app.Application
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.AndroidViewModel
 import com.terabyte.mediastorage.activity.LoginActivity
-import com.terabyte.mediastorage.activity.PhotoInfoActivity
 import com.terabyte.mediastorage.activity.room.RoomManager
 import com.terabyte.mediastorage.activity.room.UploadingHistoryItem
 import com.terabyte.mediastorage.json.ItemJson
 import com.terabyte.mediastorage.model.ItemModel
 import com.terabyte.mediastorage.model.MemoryUsageModel
 import com.terabyte.mediastorage.retrofit.RetrofitManager
-import com.terabyte.mediastorage.util.BitmapConverter
-import com.terabyte.mediastorage.util.DataStoreManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
-import java.nio.ByteBuffer
+import com.terabyte.mediastorage.util.AccessTokenManager
+import com.terabyte.mediastorage.util.BitmapManager
+import com.terabyte.mediastorage.util.UserManager
 
 class MainViewModel(private val application: Application): AndroidViewModel(application) {
     private val memoryUsageModel = MemoryUsageModel()
@@ -28,97 +23,123 @@ class MainViewModel(private val application: Application): AndroidViewModel(appl
     val stateUsername = mutableStateOf("")
     val stateEmail = mutableStateOf("")
     val stateFailureRequest = mutableStateOf(false)
-    val stateItems = mutableStateOf<ArrayList<ItemModel>?>(null)
-    val stateAmountItems = mutableStateOf(0)
+    val stateItems = mutableStateOf<List<ItemModel>?>(null)
+    val stateAmountItems = mutableIntStateOf(0)
     val stateMemoryUsage = mutableStateOf( memoryUsageModel.defaultValue())
     val stateUploadingHistory = mutableStateOf(listOf<UploadingHistoryItem>())
 
 
     init {
-        initRequests()
-    }
-
-    fun initRequests() {
         getUserInfo()
         getAllItems()
         getUploadingHistory()
     }
 
-
-
     fun getUserInfo() {
-        stateFailureRequest.value = false
-        DataStoreManager.readFromDataStore(application.applicationContext, DataStoreManager.Keys.ACCESS_TOKEN) { token ->
-            if(token==null) {
-                startLoginActivity()
+        if(UserManager.user==null) {
+            RetrofitManager.getCurrentUser(
+                application.applicationContext,
+                AccessTokenManager.getAccessToken(),
+                successListener = {
+                    UserManager.cache(it)
+                    stateUsername.value = UserManager.user!!.name
+                    stateEmail.value = UserManager.user!!.email
+                },
+                unauthorizedListener = ::defaultUnauthorizedListener,
+                failureListener = ::defaultFailureListener)
+        }
+        else {
+            stateUsername.value = UserManager.user!!.name
+            stateEmail.value = UserManager.user!!.email
+        }
+
+    }
+
+    fun uploadImage(uri: Uri, successListener: () -> Unit, noBitmapListener: () -> Unit) {
+        val token = AccessTokenManager.getAccessToken()
+
+        BitmapManager.getFileFromContentUri(application.applicationContext, uri) { file ->
+            if(file==null) {
+                noBitmapListener()
             }
             else {
-                RetrofitManager.getCurrentUser(
+                RetrofitManager.uploadItem(
                     application.applicationContext,
                     token,
-                    successListener = {
-                        stateFailureRequest.value = false
-                        stateUsername.value = it.name
-                        stateEmail.value = it.email
+                    file.name,
+                    UserManager.user!!.id,
+                    file,
+                    successListener = { itemJson ->
+                        getItemData(token, itemJson)
+                        successListener()
                     },
-                    unauthorizedListener = {
-                        startLoginActivity(token)
-                    },
-                    failureListener = {
-                        stateFailureRequest.value = true
-                    }
+                    unauthorizedListener = ::defaultUnauthorizedListener,
+                    failureListener = ::defaultFailureListener
                 )
             }
         }
     }
+
+    fun logout() {
+        val token = AccessTokenManager.getAccessToken()
+        RetrofitManager.logout(application.applicationContext, token,
+            successListener = {
+                AccessTokenManager.deleteAccessToken(application.applicationContext)
+                startLoginActivity()
+            },
+            failureListener = ::defaultFailureListener
+        )
+    }
+
 
     private fun getAllItems() {
-        DataStoreManager.readFromDataStore(application.applicationContext, DataStoreManager.Keys.ACCESS_TOKEN) { token ->
-            if(token==null) startLoginActivity()
+        val token = AccessTokenManager.getAccessToken()
+        RetrofitManager.getAllItems(
+            application.applicationContext,
+            token,
+            successListener = { itemJsonList ->
+                stateAmountItems.intValue = itemJsonList.size
+                getItemsData(itemJsonList)
+            },
+            unauthorizedListener = ::defaultUnauthorizedListener,
+            failureListener = ::defaultFailureListener
+        )
+    }
+
+    private fun getItemsData(itemJsonList: List<ItemJson>) {
+        val token = AccessTokenManager.getAccessToken()
+        itemJsonList.forEach { itemJson ->
+            getItemData(token, itemJson)
+        }
+    }
+
+    private fun getItemData(token: String, item: ItemJson) {
+        RetrofitManager.getItem(
+            application.applicationContext,
+            token,
+            item.id,
+            successListener = { bytes ->
+                calculateMemoryUsage(bytes)
+                updateStateItems(item, bytes)
+            },
+            unauthorizedListener = ::defaultUnauthorizedListener,
+            failureListener = ::defaultFailureListener
+        )
+    }
+
+    private fun updateStateItems(itemJson: ItemJson, bytes: ByteArray) {
+        BitmapManager.itemJsonToItemModel(itemJson, bytes) { itemModel ->
+            if(stateItems.value==null) {
+                stateItems.value = listOf(itemModel)
+            }
             else {
-                RetrofitManager.getAllItems(
-                    application.applicationContext,
-                    token,
-                    successListener = { itemJsonList ->
-                        stateAmountItems.value = itemJsonList.size
-                        getItemsData(token, itemJsonList)
-                    },
-                    unauthorizedListener = {
-                        startLoginActivity(token)
-                    },
-                    failureListener = {
-                        stateFailureRequest.value = true
-                    }
-                )
+                stateItems.value = stateItems.value!!.plus(itemModel)
             }
         }
     }
 
-    private fun getItemsData(accessToken: String, itemJsonList: List<ItemJson>) {
-        itemJsonList.forEach { itemJson ->
-            RetrofitManager.getItem(
-                application.applicationContext,
-                accessToken,
-                itemJson.id,
-                successListener = { bytes ->
-                    stateMemoryUsage.value = memoryUsageModel.calculateMemoryUsage(bytes)
-                    itemJsonToItemModel(itemJson, bytes)
-                },
-                unauthorizedListener = {
-                    startLoginActivity(accessToken)
-                },
-                failureListener = {
-                    stateFailureRequest.value = true
-                }
-            )
-        }
-    }
-
-    private fun itemJsonToItemModel(itemJson: ItemJson, bytes: ByteArray) {
-        BitmapConverter.itemJsonToItemModel(application.applicationContext, itemJson, bytes) {
-            if(stateItems.value==null) stateItems.value = arrayListOf(it)
-            else stateItems.value!!.add(it)
-        }
+    private fun calculateMemoryUsage(bytes: ByteArray) {
+        stateMemoryUsage.value = memoryUsageModel.calculateMemoryUsage(bytes)
     }
 
     private fun getUploadingHistory() {
@@ -127,28 +148,7 @@ class MainViewModel(private val application: Application): AndroidViewModel(appl
         }
     }
 
-    fun logout() {
-        DataStoreManager.readFromDataStore(application.applicationContext, DataStoreManager.Keys.ACCESS_TOKEN) { token ->
-            if(token==null) {
-                startLoginActivity()
-            }
-            else {
-                RetrofitManager.logout(application.applicationContext, token,
-                    successListener = {
-                        DataStoreManager.deleteFromDataStore(application.applicationContext, DataStoreManager.Keys.LOGIN)
-                        DataStoreManager.deleteFromDataStore(application.applicationContext, DataStoreManager.Keys.PASSWORD)
-                        startLoginActivity(token)
-                    },
-                    failureListener = {
-                        stateFailureRequest.value = true
-                    }
-                )
-            }
-        }
-    }
-
-    private fun startLoginActivity(token: String? = null) {
-        if(token!=null) DataStoreManager.deleteFromDataStore(application.applicationContext, DataStoreManager.Keys.ACCESS_TOKEN)
+    private fun startLoginActivity() {
         application.startActivity(
             Intent(application.applicationContext, LoginActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -156,33 +156,12 @@ class MainViewModel(private val application: Application): AndroidViewModel(appl
         )
     }
 
-    fun startPhotoInfoActivity() {
-        val intent = Intent(application.applicationContext, PhotoInfoActivity::class.java)
-        startActivity(application.applicationContext, intent, null)
+    private fun defaultUnauthorizedListener() {
+        AccessTokenManager.deleteAccessToken(application.applicationContext)
+        startLoginActivity()
     }
 
-    fun uploadImage(imageUri: Uri, successListener: () -> Unit, failureListener: () -> Unit) {
-        CoroutineScope(Dispatchers.Main).launch {
-            val deferred = async(Dispatchers.IO) {
-                val bitmap = BitmapConverter.bitmapFromLocalUri(application.applicationContext, imageUri)
-                if(bitmap==null) null
-                else {
-                    val buffer = ByteBuffer.allocate(bitmap.byteCount)
-                    bitmap.copyPixelsToBuffer(buffer)
-                    val bytes = ByteArray(bitmap.byteCount)
-                    buffer.rewind()
-                    buffer.get(bytes)
-                    bytes
-                }
-            }
-            val bytes = deferred.await()
-            if(bytes==null) {
-                failureListener()
-            }
-            else {
-//                RetrofitManager.uploadItem(application.applicationContext, )
-            }
-        }
+    private fun defaultFailureListener() {
+        stateFailureRequest.value = true
     }
-
 }

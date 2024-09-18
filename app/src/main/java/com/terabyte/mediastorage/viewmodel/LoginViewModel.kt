@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import com.terabyte.mediastorage.retrofit.RetrofitManager
+import com.terabyte.mediastorage.util.AccessTokenManager
 import com.terabyte.mediastorage.util.DataStoreManager
 
 class LoginViewModel(private val application: Application): AndroidViewModel(application) {
@@ -49,6 +50,6 @@ class LoginViewModel(private val application: Application): AndroidViewModel(app
     }
 
     private fun rememberAccessTokenInDataStore(accessToken: String) {
-        DataStoreManager.saveToDataStore(application.applicationContext, DataStoreManager.Keys.ACCESS_TOKEN, accessToken)
+        AccessTokenManager.saveAccessToken(application.applicationContext, accessToken)
     }
 }

@@ -2,10 +2,10 @@ package com.terabyte.mediastorage.activity
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -64,6 +64,7 @@ import com.terabyte.mediastorage.INTENT_ITEM_MODEL
 import com.terabyte.mediastorage.R
 import com.terabyte.mediastorage.activity.room.UploadingHistoryItem
 import com.terabyte.mediastorage.activity.ui.theme.MediaStorageTheme
+import com.terabyte.mediastorage.contract.PickImageActivityResultContract
 import com.terabyte.mediastorage.model.ItemModel
 import com.terabyte.mediastorage.ui.theme.Orange
 import com.terabyte.mediastorage.viewmodel.MainViewModel
@@ -72,21 +73,17 @@ import com.terabyte.mediastorage.viewmodel.MainViewModel
 class MainActivity : ComponentActivity() {
     private lateinit var viewModel: MainViewModel
 
-    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if(result.resultCode==RESULT_OK && result.data!=null && result.data?.data!=null)  {
-            val uri = result.data!!.data!!
+    private val pickImageLauncher = registerForActivityResult(PickImageActivityResultContract()) { uri ->
+        if(uri!=null) {
             viewModel.uploadImage(
                 uri,
                 successListener = {
-
+                    // TODO: update itemmodel list and memory usage and items amount
                 },
-                failureListener = {
-
+                noBitmapListener = {
+                    toastNoBitmap()
                 }
             )
-        }
-        else {
-// TODO: show toast or snackbar
         }
     }
 
@@ -355,12 +352,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun pickImage() {
-        val intent = Intent()
-        intent.setType("image/*")
-        intent.setAction(Intent.ACTION_GET_CONTENT)
-        pickImageLauncher.launch(intent)
-    }
 
     @Composable
     fun UploadingHistoryItem(item: UploadingHistoryItem) {
@@ -464,11 +455,21 @@ class MainActivity : ComponentActivity() {
     }
 
 
+    private fun pickImage() {
+        pickImageLauncher.launch(Unit)
+    }
+
     private fun startPhotoInfoActivity(itemModel: ItemModel) {
         val intent = Intent(this, PhotoInfoActivity::class.java)
         intent.putExtra(INTENT_ITEM_MODEL, itemModel)
         startActivity(intent)
     }
+
+    private fun toastNoBitmap() {
+        Toast.makeText(this, "Unable to open image.", Toast.LENGTH_LONG).show()
+    }
+
+
     data class BarItem(
         val title: String,
         val image: ImageVector,

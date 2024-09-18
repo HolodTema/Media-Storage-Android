@@ -3,7 +3,7 @@ package com.terabyte.mediastorage.activity.room
 import android.content.Context
 import androidx.room.Room
 import com.terabyte.mediastorage.ROOM_DATABASE_NAME
-import com.terabyte.mediastorage.util.BitmapConverter
+import com.terabyte.mediastorage.util.BitmapManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -24,7 +24,7 @@ object RoomManager {
             val deferred = async(Dispatchers.IO) {
                 val list = db.getUploadingHistoryDao().getAll()
                 list.map { item ->
-                    BitmapConverter.addBitmapToUploadingHistoryItem(context, item)
+                    BitmapManager.addBitmapToUploadingHistoryItem(context, item)
                 }
                 list
             }

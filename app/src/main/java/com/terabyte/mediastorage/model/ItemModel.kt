@@ -46,7 +46,7 @@ data class ItemModel(
             }
 
             override fun newArray(size: Int): Array<ItemModel> {
-                return arrayOf<ItemModel>()
+                return arrayOf()
             }
         }
     }

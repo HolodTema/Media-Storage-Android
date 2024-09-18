@@ -39,14 +39,8 @@ class PhotoInfoActivity: ComponentActivity() {
                 ViewModelProvider.AndroidViewModelFactory.getInstance(application)
             )[PhotoInfoViewModel::class.java]
 
-            if(intent!=null && intent.extras!=null && intent.extras!!.containsKey(INTENT_ITEM_MODEL)) {
-                val itemModel = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    intent.extras!!.getParcelable(INTENT_ITEM_MODEL, ItemModel::class.java)
-                } else {
-                    intent.extras!!.getParcelable<ItemModel>(INTENT_ITEM_MODEL)
-                }
-                viewModel.stateItemModel.value = itemModel
-            }
+            setItemModelFromExtrasToViewModel()
+
             MediaStorageTheme {
                 PhotoInfoContent()
             }
@@ -110,6 +104,17 @@ class PhotoInfoActivity: ComponentActivity() {
                     .background(Color.Gray)
             )
 
+        }
+    }
+
+    private fun setItemModelFromExtrasToViewModel() {
+        if(intent!=null && intent.extras!=null && intent.extras!!.containsKey(INTENT_ITEM_MODEL)) {
+            val itemModel = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent.extras!!.getParcelable(INTENT_ITEM_MODEL, ItemModel::class.java)
+            } else {
+                intent.extras!!.getParcelable<ItemModel>(INTENT_ITEM_MODEL)
+            }
+            viewModel.stateItemModel.value = itemModel
         }
     }
 }

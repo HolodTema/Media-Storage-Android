@@ -1,6 +1,9 @@
 package com.terabyte.mediastorage
 
-const val BASE_URL = "http://192.168.31.38:8000"
+
+//10.0.2.2 for emulator connection to pc localhost
+//and 127.0.0.1:8000 for real device
+const val BASE_URL = "http://10.0.2.2:8000"
 
 const val DATA_STORE_NAME = "myDataStore"
 

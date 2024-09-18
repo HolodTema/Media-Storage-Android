@@ -12,31 +12,44 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
+import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import java.io.File
 
 object RetrofitManager {
     private lateinit var client: Retrofit
 
 
-    fun auth(context: Context, username: String, password: String, successListener: (AuthResponseJson) -> Unit, incorrectLoginListener: () -> Unit, failureListener: () -> Unit) {
-        if(!::client.isInitialized) createClient(context)
+    fun auth(
+        context: Context,
+        username: String,
+        password: String,
+        successListener: (AuthResponseJson) -> Unit,
+        incorrectLoginListener: () -> Unit,
+        failureListener: () -> Unit
+    ) {
+        if (!::client.isInitialized) createClient(context)
 
         val service = client.create(AuthService::class.java)
         val call = service.login(username, password)
         call.enqueue(
-            object: Callback<AuthResponseJson> {
-                override fun onResponse(p0: Call<AuthResponseJson>, p1: Response<AuthResponseJson>) {
-                    if(p1.body()==null) {
-                        if(p1.code()==400) incorrectLoginListener()
+            object : Callback<AuthResponseJson> {
+                override fun onResponse(
+                    p0: Call<AuthResponseJson>,
+                    p1: Response<AuthResponseJson>
+                ) {
+                    if (p1.body() == null) {
+                        if (p1.code() == 400) incorrectLoginListener()
                         else failureListener()
-                    }
-                    else {
+                    } else {
                         successListener(p1.body()!!)
                     }
                 }
@@ -48,13 +61,18 @@ object RetrofitManager {
         )
     }
 
-    fun logout(context: Context, accessToken: String, successListener: () -> Unit, failureListener: () -> Unit) {
-        if(!::client.isInitialized) createClient(context)
+    fun logout(
+        context: Context,
+        accessToken: String,
+        successListener: () -> Unit,
+        failureListener: () -> Unit
+    ) {
+        if (!::client.isInitialized) createClient(context)
 
         val service = client.create(LogoutService::class.java)
         val call = service.login("$TOKEN_TYPE $accessToken")
         call.enqueue(
-            object: Callback<Unit> {
+            object : Callback<Unit> {
                 override fun onResponse(p0: Call<Unit>, p1: Response<Unit>) {
                     successListener()
                 }
@@ -66,18 +84,23 @@ object RetrofitManager {
         )
     }
 
-    fun getCurrentUser(context: Context, accessToken: String, successListener: (UserJson) -> Unit, unauthorizedListener: () -> Unit, failureListener: () -> Unit) {
-        if(!::client.isInitialized) createClient(context)
+    fun getCurrentUser(
+        context: Context,
+        accessToken: String,
+        successListener: (UserJson) -> Unit,
+        unauthorizedListener: () -> Unit,
+        failureListener: () -> Unit
+    ) {
+        if (!::client.isInitialized) createClient(context)
 
         val service = client.create(CurrentUserService::class.java)
         val call = service.getCurrentUser("$TOKEN_TYPE $accessToken")
-        call.enqueue(object: Callback<UserJson> {
+        call.enqueue(object : Callback<UserJson> {
             override fun onResponse(p0: Call<UserJson>, p1: Response<UserJson>) {
-                if(p1.body()==null) {
-                    if(p1.code()==401) unauthorizedListener()
+                if (p1.body() == null) {
+                    if (p1.code() == 401) unauthorizedListener()
                     else failureListener()
-                }
-                else successListener(p1.body()!!)
+                } else successListener(p1.body()!!)
             }
 
             override fun onFailure(p0: Call<UserJson>, p1: Throwable) {
@@ -87,19 +110,24 @@ object RetrofitManager {
     }
 
 
-    fun getAllItems(context: Context, accessToken: String, successListener: (List<ItemJson>) -> Unit, unauthorizedListener: () -> Unit, failureListener: () -> Unit) {
-        if(!::client.isInitialized) createClient(context)
+    fun getAllItems(
+        context: Context,
+        accessToken: String,
+        successListener: (List<ItemJson>) -> Unit,
+        unauthorizedListener: () -> Unit,
+        failureListener: () -> Unit
+    ) {
+        if (!::client.isInitialized) createClient(context)
 
         val service = client.create(GetAllItemsService::class.java)
         val call = service.getAllItems("$TOKEN_TYPE $accessToken")
         call.enqueue(
-            object: Callback<List<ItemJson>> {
+            object : Callback<List<ItemJson>> {
                 override fun onResponse(p0: Call<List<ItemJson>>, p1: Response<List<ItemJson>>) {
-                    if(p1.body()==null) {
-                        if(p1.code()==401) unauthorizedListener()
+                    if (p1.body() == null) {
+                        if (p1.code() == 401) unauthorizedListener()
                         else failureListener()
-                    }
-                    else successListener(p1.body()!!)
+                    } else successListener(p1.body()!!)
                 }
 
                 override fun onFailure(p0: Call<List<ItemJson>>, p1: Throwable) {
@@ -109,19 +137,25 @@ object RetrofitManager {
         )
     }
 
-    fun getItem(context: Context, accessToken: String, itemId: String, successListener: (ByteArray) -> Unit, unauthorizedListener: () -> Unit, failureListener: () -> Unit) {
-        if(!::client.isInitialized) createClient(context)
+    fun getItem(
+        context: Context,
+        accessToken: String,
+        itemId: String,
+        successListener: (ByteArray) -> Unit,
+        unauthorizedListener: () -> Unit,
+        failureListener: () -> Unit
+    ) {
+        if (!::client.isInitialized) createClient(context)
 
         val service = client.create(GetItemService::class.java)
         val call = service.getAllItems("$TOKEN_TYPE $accessToken", itemId)
         call.enqueue(
-            object: Callback<ResponseBody> {
+            object : Callback<ResponseBody> {
                 override fun onResponse(p0: Call<ResponseBody>, p1: Response<ResponseBody>) {
-                    if(p1.body()==null) {
-                        if(p1.code()==401) unauthorizedListener()
+                    if (p1.body() == null) {
+                        if (p1.code() == 401) unauthorizedListener()
                         else failureListener()
-                    }
-                    else {
+                    } else {
                         CoroutineScope(Dispatchers.Main).launch {
                             val deferred = async(Dispatchers.IO) {
                                 p1.body()!!.bytes()
@@ -138,18 +172,30 @@ object RetrofitManager {
         )
     }
 
-    fun uploadItem(context: Context, accessToken: String, name: String, ownerId: Int, successListener: (ItemJson) -> Unit, unauthorizedListener: () -> Unit, failureListener: () -> Unit) {
-        if(!::client.isInitialized) createClient(context)
+    fun uploadItem(
+        context: Context,
+        accessToken: String,
+        name: String,
+        ownerId: Int,
+        file: File,
+        successListener: (ItemJson) -> Unit,
+        unauthorizedListener: () -> Unit,
+        failureListener: () -> Unit
+    ) {
+        if (!::client.isInitialized) createClient(context)
+
+        val requestBody = file.asRequestBody("multipart/form-data".toMediaTypeOrNull())
+        val part = MultipartBody.Part.createFormData("item_raw", file.name, requestBody)
+
         val service = client.create(PostItemService::class.java)
-        val call = service.postItem(accessToken, name, ownerId)
+        val call = service.postItem("$TOKEN_TYPE $accessToken", name, ownerId, part)
         call.enqueue(
-            object: Callback<ItemJson> {
+            object : Callback<ItemJson> {
                 override fun onResponse(p0: Call<ItemJson>, p1: Response<ItemJson>) {
-                    if(p1.body()==null) {
-                        if(p1.code()==401) unauthorizedListener()
+                    if (p1.body() == null) {
+                        if (p1.code() == 401) unauthorizedListener()
                         else failureListener()
-                    }
-                    else {
+                    } else {
                         successListener(p1.body()!!)
                     }
                 }
