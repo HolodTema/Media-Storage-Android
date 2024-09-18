@@ -2,9 +2,11 @@ package com.terabyte.mediastorage.viewmodel
 
 import android.app.Application
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.AndroidViewModel
 import com.terabyte.mediastorage.activity.LoginActivity
 import com.terabyte.mediastorage.activity.room.RoomManager
@@ -16,6 +18,9 @@ import com.terabyte.mediastorage.retrofit.RetrofitManager
 import com.terabyte.mediastorage.util.AccessTokenManager
 import com.terabyte.mediastorage.util.BitmapManager
 import com.terabyte.mediastorage.util.UserManager
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MainViewModel(private val application: Application): AndroidViewModel(application) {
     private val memoryUsageModel = MemoryUsageModel()
@@ -58,8 +63,11 @@ class MainViewModel(private val application: Application): AndroidViewModel(appl
     fun uploadImage(uri: Uri, successListener: () -> Unit, noBitmapListener: () -> Unit) {
         val token = AccessTokenManager.getAccessToken()
 
-        BitmapManager.getFileFromContentUri(application.applicationContext, uri) { file ->
-            if(file==null) {
+        BitmapManager.getBitmapAndFileFromContentUri(application.applicationContext, uri) { pair ->
+            val bitmap = pair.first
+            val file = pair.second
+
+            if(file==null || bitmap==null) {
                 noBitmapListener()
             }
             else {
@@ -71,6 +79,7 @@ class MainViewModel(private val application: Application): AndroidViewModel(appl
                     file,
                     successListener = { itemJson ->
                         getItemData(token, itemJson)
+                        insertToUploadingHistory(itemJson, file.absolutePath, bitmap)
                         successListener()
                     },
                     unauthorizedListener = ::defaultUnauthorizedListener,
@@ -78,6 +87,21 @@ class MainViewModel(private val application: Application): AndroidViewModel(appl
                 )
             }
         }
+    }
+
+    private fun insertToUploadingHistory(itemJson: ItemJson, filePath: String, bitmap: Bitmap) {
+        val uploadingHistoryItem =  UploadingHistoryItem(
+            0L,
+            itemJson.filename,
+            SimpleDateFormat("dd.MM.yyyy hh:mm", Locale.US).format(Date()),
+            filePath,
+            bitmap.asImageBitmap()
+        )
+        RoomManager.insertUploadingHistoryItem(
+            application.applicationContext,
+            uploadingHistoryItem
+        )
+        stateUploadingHistory.value = stateUploadingHistory.value.plus(uploadingHistoryItem)
     }
 
     fun logout() {

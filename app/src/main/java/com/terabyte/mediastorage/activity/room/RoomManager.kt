@@ -26,7 +26,6 @@ object RoomManager {
                 list.map { item ->
                     BitmapManager.addBitmapToUploadingHistoryItem(context, item)
                 }
-                list
             }
             listener(deferred.await())
         }

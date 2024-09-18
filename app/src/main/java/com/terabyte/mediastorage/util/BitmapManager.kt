@@ -3,10 +3,7 @@ package com.terabyte.mediastorage.util
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.ImageDecoder
 import android.net.Uri
-import android.os.Build
-import android.provider.MediaStore
 import androidx.compose.ui.graphics.asImageBitmap
 import com.terabyte.mediastorage.activity.room.UploadingHistoryItem
 import com.terabyte.mediastorage.json.ItemJson
@@ -41,12 +38,7 @@ object BitmapManager {
 
     fun addBitmapToUploadingHistoryItem(context: Context, item: UploadingHistoryItem): UploadingHistoryItem {
         try {
-            val uri = Uri.parse(item.imageUri)
-            val bitmap = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                ImageDecoder.decodeBitmap(ImageDecoder.createSource(context.contentResolver, uri))
-            } else {
-                MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
-            }.asImageBitmap()
+            val bitmap = BitmapFactory.decodeFile(item.imagePath).asImageBitmap()
             return item.copy(
                 image = bitmap
             )
@@ -56,7 +48,7 @@ object BitmapManager {
         }
     }
 
-    fun getFileFromContentUri(context: Context, uri: Uri, listener: (File?) -> Unit) {
+    fun getBitmapAndFileFromContentUri(context: Context, uri: Uri, listener: (Pair<Bitmap?, File?>) -> Unit) {
         CoroutineScope(Dispatchers.Main).launch {
             val deferred = async(Dispatchers.IO) {
                 val quality = 100
@@ -64,7 +56,7 @@ object BitmapManager {
                 try {
                     val inputStream = context.contentResolver.openInputStream(uri)
                     if(inputStream==null) {
-                        null
+                        null to null
                     }
                     else {
                         val bitmap = BitmapFactory.decodeStream(inputStream)
@@ -82,12 +74,12 @@ object BitmapManager {
                         val fileOutputStream = FileOutputStream(file)
                         bitmap.compress(Bitmap.CompressFormat.JPEG, quality, fileOutputStream)
                         fileOutputStream.close()
-                        file
+                        bitmap to file
                     }
                 }
                 catch(e: Exception) {
                     e.printStackTrace()
-                    null
+                    null to null
                 }
             }
 
