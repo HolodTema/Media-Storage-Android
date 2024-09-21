@@ -23,6 +23,8 @@ import java.util.Date
 import java.util.Locale
 
 class MainViewModel(private val application: Application): AndroidViewModel(application) {
+    private var isItemDeleted = false
+
     private val memoryUsageModel = MemoryUsageModel()
 
     val stateUsername = mutableStateOf("")
@@ -78,7 +80,9 @@ class MainViewModel(private val application: Application): AndroidViewModel(appl
                     UserManager.user!!.id,
                     file,
                     successListener = { itemJson ->
-                        getItemData(token, itemJson)
+                        getItemData(token, itemJson) {
+                            stateAmountItems.value ++
+                        }
                         insertToUploadingHistory(itemJson, file.absolutePath, bitmap)
                         successListener()
                     },
@@ -137,7 +141,7 @@ class MainViewModel(private val application: Application): AndroidViewModel(appl
         }
     }
 
-    private fun getItemData(token: String, item: ItemJson) {
+    private fun getItemData(token: String, item: ItemJson, successListener: () -> Unit = {}) {
         RetrofitManager.getItem(
             application.applicationContext,
             token,
@@ -145,6 +149,7 @@ class MainViewModel(private val application: Application): AndroidViewModel(appl
             successListener = { bytes ->
                 calculateMemoryUsage(bytes)
                 updateStateItems(item, bytes)
+                successListener()
             },
             unauthorizedListener = ::defaultUnauthorizedListener,
             failureListener = ::defaultFailureListener
@@ -187,5 +192,19 @@ class MainViewModel(private val application: Application): AndroidViewModel(appl
 
     private fun defaultFailureListener() {
         stateFailureRequest.value = true
+    }
+
+    fun deleteItemFromMutableStates(deletedItemId: String, deletedItemBytesSize: Int) {
+        if(!isItemDeleted) {
+            stateAmountItems.value --;
+            stateMemoryUsage.value = memoryUsageModel.deleteFromMemoryUsage(deletedItemBytesSize)
+            stateItems.value?.let {
+                stateItems.value = stateItems.value!!.filter { itemModel ->
+                    itemModel.id!=deletedItemId
+                }
+            }
+            isItemDeleted = true
+        }
+
     }
 }

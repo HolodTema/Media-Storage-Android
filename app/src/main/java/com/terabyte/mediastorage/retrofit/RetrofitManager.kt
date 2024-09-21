@@ -209,6 +209,34 @@ object RetrofitManager {
     }
 
 
+    fun deleteItem(
+        context: Context,
+        accessToken: String,
+        itemId: String,
+        successListener: () -> Unit,
+        unauthorizedListener: () -> Unit,
+        failureListener: () -> Unit
+    ) {
+        if (!::client.isInitialized) createClient(context)
+
+        val service = client.create(DeleteItemService::class.java)
+        val call = service.deleteItem("$TOKEN_TYPE $accessToken", itemId)
+        call.enqueue(
+            object : Callback<Unit> {
+                override fun onResponse(p0: Call<Unit>, p1: Response<Unit>) {
+                    if(p1.code()==401) unauthorizedListener()
+                    else successListener()
+                }
+
+                override fun onFailure(p0: Call<Unit>, p1: Throwable) {
+                    failureListener()
+                }
+            }
+        )
+
+    }
+
+
     private fun createClient(context: Context) {
         client = Retrofit.Builder()
             .baseUrl(BASE_URL)

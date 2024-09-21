@@ -13,3 +13,5 @@ const val TOKEN_TYPE = "Bearer"
 
 
 const val INTENT_ITEM_MODEL = "itemModel"
+const val INTENT_DELETED_ITEM_ID = "deletedItemId"
+const val INTENT_DELETED_ITEM_BYTES_SIZE = "deletedItemBytesSize"

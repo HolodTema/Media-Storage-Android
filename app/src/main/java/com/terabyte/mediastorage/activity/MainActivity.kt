@@ -60,6 +60,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.terabyte.mediastorage.INTENT_DELETED_ITEM_BYTES_SIZE
+import com.terabyte.mediastorage.INTENT_DELETED_ITEM_ID
 import com.terabyte.mediastorage.INTENT_ITEM_MODEL
 import com.terabyte.mediastorage.R
 import com.terabyte.mediastorage.activity.room.UploadingHistoryItem
@@ -95,6 +97,8 @@ class MainActivity : ComponentActivity() {
                 this,
                 ViewModelProvider.AndroidViewModelFactory.getInstance(application)
             )[MainViewModel::class]
+
+            checkIntentExtras()
             val navController = rememberNavController()
 
             MediaStorageTheme {
@@ -110,6 +114,21 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun checkIntentExtras() {
+        val hasIntent = intent!=null && intent.extras!=null
+        if(hasIntent) {
+            val hasExtraId = intent.extras!!.containsKey(INTENT_DELETED_ITEM_ID)
+            val hasExtraBytesSize = intent.extras!!.containsKey(INTENT_DELETED_ITEM_BYTES_SIZE)
+            if(hasExtraId && hasExtraBytesSize) {
+                val deletedItemId = intent.extras!!.getString(INTENT_DELETED_ITEM_ID)!!
+                val deletedItemBytesSize = intent.extras!!.getInt(INTENT_DELETED_ITEM_BYTES_SIZE)
+                viewModel.deleteItemFromMutableStates(deletedItemId, deletedItemBytesSize)
+            }
+
+        }
+
     }
 
 

@@ -11,6 +11,21 @@ class MemoryUsageModel {
 
     fun calculateMemoryUsage(bytes: ByteArray): String {
         memoryUsageBytes += bytes.size
+        convertMemoryUsageBytesToUIView()
+        return "$memoryUsage $type"
+    }
+
+    fun deleteFromMemoryUsage(deletedBytesSize: Int): String {
+        memoryUsageBytes -= deletedBytesSize
+        convertMemoryUsageBytesToUIView()
+        return "$memoryUsage $type"
+    }
+
+    fun defaultValue(): String {
+        return "$memoryUsage $type"
+    }
+
+    private fun convertMemoryUsageBytesToUIView() {
         if(memoryUsageBytes>1024*1024*1024) {
             type = DataType.GB
             memoryUsage = memoryUsageBytes / (1024*1024*1024)
@@ -27,11 +42,6 @@ class MemoryUsageModel {
             type = DataType.B
             memoryUsage = memoryUsageBytes
         }
-        return "$memoryUsage $type"
-    }
-
-    fun defaultValue(): String {
-        return "$memoryUsage $type"
     }
 
     object DataType {
