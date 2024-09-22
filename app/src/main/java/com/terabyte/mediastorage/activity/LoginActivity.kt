@@ -252,7 +252,7 @@ class LoginActivity : ComponentActivity() {
                         centerHorizontallyTo(parent)
                     }
             ) {
-                Text(text = "Login!", color = Orange)
+                Text(text = "Sign in!", color = Orange)
             }
 
         }

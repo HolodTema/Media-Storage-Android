@@ -1,12 +1,15 @@
 package com.terabyte.mediastorage.activity
 
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,6 +20,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,9 +32,8 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.terabyte.mediastorage.INTENT_DELETED_ITEM_BYTES_SIZE
 import com.terabyte.mediastorage.INTENT_DELETED_ITEM_ID
-import com.terabyte.mediastorage.INTENT_ITEM_MODEL
-import com.terabyte.mediastorage.model.ItemModel
 import com.terabyte.mediastorage.ui.theme.MediaStorageTheme
+import com.terabyte.mediastorage.util.ActivityCommunicationManager
 import com.terabyte.mediastorage.util.ImageZoom
 import com.terabyte.mediastorage.viewmodel.PhotoInfoViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -51,7 +54,7 @@ class PhotoInfoActivity : ComponentActivity() {
                 ViewModelProvider.AndroidViewModelFactory.getInstance(application)
             )[PhotoInfoViewModel::class.java]
 
-            setItemModelFromExtrasToViewModel()
+            setItemModelToViewModel()
 
             MediaStorageTheme {
                 PhotoInfoContent()
@@ -170,6 +173,7 @@ class PhotoInfoActivity : ComponentActivity() {
             val buttonBack = createRef()
             val buttonDelete = createRef()
             val textFilename = createRef()
+            val boxTopBar = createRef()
 
             ImageZoom(
                 bitmap = viewModel.stateItemModel.value!!.image,
@@ -180,6 +184,18 @@ class PhotoInfoActivity : ComponentActivity() {
                         top.linkTo(parent.top)
                         bottom.linkTo(parent.bottom)
                     }
+            )
+
+            Box(
+                modifier = Modifier
+                    .constrainAs(boxTopBar) {
+                        top.linkTo(parent.top)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    }
+                    .background(Color.White)
+                    .fillMaxWidth()
+                    .height(60.dp)
             )
 
             TextFilename(
@@ -217,17 +233,10 @@ class PhotoInfoActivity : ComponentActivity() {
         }
     }
 
-    private fun setItemModelFromExtrasToViewModel() {
-        if (intent != null && intent.extras != null && intent.extras!!.containsKey(
-                INTENT_ITEM_MODEL
-            )
-        ) {
-            val itemModel = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                intent.extras!!.getParcelable(INTENT_ITEM_MODEL, ItemModel::class.java)
-            } else {
-                intent.extras!!.getParcelable<ItemModel>(INTENT_ITEM_MODEL)
-            }
-            viewModel.stateItemModel.value = itemModel
+    private fun setItemModelToViewModel() {
+        if(ActivityCommunicationManager.itemModel!=null) {
+            viewModel.stateItemModel.value = ActivityCommunicationManager.itemModel!!
+            ActivityCommunicationManager.dropItemModel()
         }
     }
 

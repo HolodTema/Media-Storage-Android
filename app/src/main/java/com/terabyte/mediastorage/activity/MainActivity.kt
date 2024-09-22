@@ -65,13 +65,13 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.terabyte.mediastorage.INTENT_DELETED_ITEM_BYTES_SIZE
 import com.terabyte.mediastorage.INTENT_DELETED_ITEM_ID
-import com.terabyte.mediastorage.INTENT_ITEM_MODEL
 import com.terabyte.mediastorage.R
 import com.terabyte.mediastorage.activity.room.UploadingHistoryItem
 import com.terabyte.mediastorage.activity.ui.theme.MediaStorageTheme
 import com.terabyte.mediastorage.contract.PickImageActivityResultContract
 import com.terabyte.mediastorage.model.ItemModel
 import com.terabyte.mediastorage.ui.theme.Orange
+import com.terabyte.mediastorage.util.ActivityCommunicationManager
 import com.terabyte.mediastorage.util.UserManager
 import com.terabyte.mediastorage.viewmodel.MainViewModel
 
@@ -511,7 +511,7 @@ class MainActivity : ComponentActivity() {
 
     private fun startPhotoInfoActivity(itemModel: ItemModel) {
         val intent = Intent(this, PhotoInfoActivity::class.java)
-        intent.putExtra(INTENT_ITEM_MODEL, itemModel)
+        ActivityCommunicationManager.putItemModel(itemModel)
         startActivity(intent)
     }
 

@@ -17,6 +17,7 @@ class MemoryUsageModel {
 
     fun deleteFromMemoryUsage(deletedBytesSize: Int): String {
         memoryUsageBytes -= deletedBytesSize
+        if(memoryUsageBytes<0) memoryUsageBytes = 0
         convertMemoryUsageBytesToUIView()
         return "$memoryUsage $type"
     }
