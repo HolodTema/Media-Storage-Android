@@ -7,27 +7,37 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.ViewModelProvider
+import com.airbnb.lottie.LottieComposition
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.terabyte.mediastorage.INTENT_DELETED_ITEM_BYTES_SIZE
 import com.terabyte.mediastorage.INTENT_DELETED_ITEM_ID
 import com.terabyte.mediastorage.INTENT_ITEM_MODEL
-import com.terabyte.mediastorage.R
 import com.terabyte.mediastorage.model.ItemModel
 import com.terabyte.mediastorage.ui.theme.MediaStorageTheme
-import com.terabyte.mediastorage.ui.theme.Orange
 import com.terabyte.mediastorage.util.ImageZoom
 import com.terabyte.mediastorage.viewmodel.PhotoInfoViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class PhotoInfoActivity : ComponentActivity() {
     private lateinit var viewModel: PhotoInfoViewModel
@@ -50,64 +60,108 @@ class PhotoInfoActivity : ComponentActivity() {
     }
 
     @Composable
-    fun ButtonBack(modifier: Modifier) {
+    fun ButtonBack(
+        modifier: Modifier,
+        composition: LottieComposition?,
+        isPlaying: MutableState<Boolean>
+    ) {
         IconButton(
             onClick = {
-                finish()
+                isPlaying.value = true
+                CoroutineScope(Dispatchers.Main).launch {
+                    val deferred = async(Dispatchers.IO) {
+                        delay(400L)
+                    }
+                    deferred.await()
+                    finish()
+                }
             },
             modifier = modifier
+                .size(35.dp)
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_back),
-                tint = Orange,
-                contentDescription = "back",
+            LottieAnimation(
                 modifier = Modifier
-                    .size(40.dp)
+                    .fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                composition = composition,
+                isPlaying = isPlaying.value,
+                speed = 0.4f,
             )
         }
     }
 
     @Composable
     fun TextFilename(modifier: Modifier) {
+        var text = viewModel.stateItemModel.value?.filename ?: ""
+        if(text.length>40) {
+            text = text.substring(37) + "..."
+        }
         Text(
-            text = viewModel.stateItemModel.value?.filename ?: "",
+            text = text,
             fontSize = 20.sp,
             modifier = modifier
         )
     }
 
     @Composable
-    fun ButtonDeleteImage(modifier: Modifier) {
+    fun ButtonDeleteImage(
+        modifier: Modifier,
+        composition: LottieComposition?,
+        isPlaying: MutableState<Boolean>,
+    ) {
+
         IconButton(
             onClick = {
-                viewModel.deleteImage(
-                    successListener = {
-                        startMainActivityWithDeletedInfoExtras()
-                    },
-                    failureListener = {
-                        Toast.makeText(
-                            this@PhotoInfoActivity,
-                            "Something went wrong. Check your Internet connection.",
-                            Toast.LENGTH_LONG
-                        ).show()
+                isPlaying.value = true
+
+                CoroutineScope(Dispatchers.Main).launch {
+                    val deferred = async(Dispatchers.IO) {
+                        delay(1000L)
                     }
-                )
-                // TODO: delete image using retrofit
+                    deferred.await()
+                    viewModel.deleteImage(
+                        successListener = {
+                            startMainActivityWithDeletedInfoExtras()
+                        },
+                        failureListener = {
+                            Toast.makeText(
+                                this@PhotoInfoActivity,
+                                "Something went wrong. Check your Internet connection.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    )
+                }
             },
             modifier = modifier
+                .size(80.dp)
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_show_password),
-                tint = Orange,
-                contentDescription = "delete",
+            LottieAnimation(
                 modifier = Modifier
-                    .size(40.dp)
+                    .fillMaxSize(),
+                contentScale = ContentScale.Crop,
+                composition = composition,
+                isPlaying = isPlaying.value,
+                speed = 1f,
             )
         }
     }
 
     @Composable
     fun PhotoInfoContent() {
+        val buttonDeleteComposition = rememberLottieComposition(
+            spec = LottieCompositionSpec.Asset("ic_lottie_delete.json")
+        )
+        val buttonDeleteIsPlaying = remember {
+            mutableStateOf(false)
+        }
+        val buttonBackComposition = rememberLottieComposition(
+            spec = LottieCompositionSpec.Asset("ic_lottie_back.json")
+        )
+        val buttonBackIsPlaying = remember {
+            mutableStateOf(false)
+        }
+
         ConstraintLayout(
             modifier = Modifier
                 .fillMaxSize()
@@ -133,27 +187,32 @@ class PhotoInfoActivity : ComponentActivity() {
                     .constrainAs(textFilename) {
                         top.linkTo(buttonBack.top)
                         bottom.linkTo(buttonBack.bottom)
-                        end.linkTo(buttonBack.start)
-                        start.linkTo(buttonDelete.end)
+                        end.linkTo(buttonDelete.start)
+                        start.linkTo(buttonBack.end)
                     }
                     .padding(top = 8.dp)
             )
 
             ButtonBack(
-                modifier = Modifier.constrainAs(buttonBack) {
-                top.linkTo(parent.top)
-                end.linkTo(parent.end)
-            }
-                .padding(top = 8.dp, end = 8.dp)
+                modifier = Modifier
+                    .constrainAs(buttonBack) {
+                        top.linkTo(parent.top)
+                        start.linkTo(parent.start)
+                    }
+                    .padding(top = 16.dp, start = 18.dp),
+                composition = buttonBackComposition.value,
+                isPlaying = buttonBackIsPlaying
             )
 
             ButtonDeleteImage(
                 modifier = Modifier
                     .constrainAs(buttonDelete) {
-                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
                         top.linkTo(parent.top)
                     }
-                    .padding(top = 8.dp, end = 8.dp)
+                    .offset(0.dp, -20.dp),
+                composition = buttonDeleteComposition.value,
+                isPlaying = buttonDeleteIsPlaying,
             )
         }
     }

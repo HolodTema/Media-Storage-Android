@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,15 +21,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.Face
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -43,8 +42,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -60,6 +59,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.terabyte.mediastorage.INTENT_DELETED_ITEM_BYTES_SIZE
 import com.terabyte.mediastorage.INTENT_DELETED_ITEM_ID
 import com.terabyte.mediastorage.INTENT_ITEM_MODEL
@@ -69,25 +72,27 @@ import com.terabyte.mediastorage.activity.ui.theme.MediaStorageTheme
 import com.terabyte.mediastorage.contract.PickImageActivityResultContract
 import com.terabyte.mediastorage.model.ItemModel
 import com.terabyte.mediastorage.ui.theme.Orange
+import com.terabyte.mediastorage.util.UserManager
 import com.terabyte.mediastorage.viewmodel.MainViewModel
 
 
 class MainActivity : ComponentActivity() {
     private lateinit var viewModel: MainViewModel
 
-    private val pickImageLauncher = registerForActivityResult(PickImageActivityResultContract()) { uri ->
-        if(uri!=null) {
-            viewModel.uploadImage(
-                uri,
-                successListener = {
-                    // TODO: update itemmodel list and memory usage and items amount
-                },
-                noBitmapListener = {
-                    toastNoBitmap()
-                }
-            )
+    private val pickImageLauncher =
+        registerForActivityResult(PickImageActivityResultContract()) { uri ->
+            if (uri != null) {
+                viewModel.uploadImage(
+                    uri,
+                    successListener = {
+                        // TODO: update itemmodel list and memory usage and items amount
+                    },
+                    noBitmapListener = {
+                        toastNoBitmap()
+                    }
+                )
+            }
         }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -105,7 +110,7 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
-                        if(!viewModel.stateFailureRequest.value) {
+                        if (!viewModel.stateFailureRequest.value) {
                             BottomNavigationBar(navController)
                         }
                     }
@@ -117,11 +122,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun checkIntentExtras() {
-        val hasIntent = intent!=null && intent.extras!=null
-        if(hasIntent) {
+        val hasIntent = intent != null && intent.extras != null
+        if (hasIntent) {
             val hasExtraId = intent.extras!!.containsKey(INTENT_DELETED_ITEM_ID)
             val hasExtraBytesSize = intent.extras!!.containsKey(INTENT_DELETED_ITEM_BYTES_SIZE)
-            if(hasExtraId && hasExtraBytesSize) {
+            if (hasExtraId && hasExtraBytesSize) {
                 val deletedItemId = intent.extras!!.getString(INTENT_DELETED_ITEM_ID)!!
                 val deletedItemBytesSize = intent.extras!!.getInt(INTENT_DELETED_ITEM_BYTES_SIZE)
                 viewModel.deleteItemFromMutableStates(deletedItemId, deletedItemBytesSize)
@@ -134,7 +139,7 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun MainContent(navController: NavHostController, paddingValues: PaddingValues) {
-        if(viewModel.stateFailureRequest.value) {
+        if (viewModel.stateFailureRequest.value) {
             Column(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -161,15 +166,15 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
-        }
-        else {
+        } else {
             Column(
                 modifier = Modifier
                     .padding(
                         top = paddingValues.calculateTopPadding(),
                         start = paddingValues.calculateStartPadding(LayoutDirection.Ltr),
                         end = paddingValues.calculateEndPadding(LayoutDirection.Ltr),
-                        bottom = paddingValues.calculateBottomPadding())
+                        bottom = paddingValues.calculateBottomPadding()
+                    )
             ) {
                 NavHost(navController, startDestination = "account") {
                     composable(Routes.Account.route) {
@@ -191,44 +196,52 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun Account() {
-
-        Column(
+        ConstraintLayout(
             modifier = Modifier
                 .fillMaxSize()
-
         ) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp, start = 8.dp, end = 8.dp, bottom = 8.dp)
-            ) {
-                Text(
-                    text = "User",
-                    fontSize = 30.sp,
-                    modifier = Modifier
-                        .padding(start = 8.dp)
-                )
-                Button(
-                    onClick = {
-                        viewModel.logout()
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Orange
-                    )
-                ) {
-                    Text(text = "Sign out")
-                }
-            }
+            val buttonLogout = createRef()
+            val textUsername = createRef()
+            val textEmail = createRef()
+
             Text(
-                text = "Email: user@example.com",
+                text = UserManager.user!!.name,
+                fontSize = 30.sp,
                 modifier = Modifier
+                    .constrainAs(textUsername) {
+                        top.linkTo(parent.top)
+                        start.linkTo(parent.start)
+                    }
+                    .padding(start = 16.dp, top = 16.dp)
+            )
+            Text(
+                text = "Email: ${UserManager.user!!.email}",
+                modifier = Modifier
+                    .constrainAs(textEmail) {
+                        top.linkTo(textUsername.bottom)
+                        start.linkTo(parent.start)
+                    }
                     .padding(top = 16.dp, start = 16.dp),
                 fontSize = 18.sp
             )
+
+            Button(
+                onClick = {
+                    viewModel.logout()
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Orange
+                ),
+                modifier = Modifier
+                    .constrainAs(buttonLogout) {
+                        bottom.linkTo(parent.bottom, margin = 16.dp)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    }
+            ) {
+                Text(text = "Sign out")
+            }
         }
-
-
     }
 
 
@@ -240,46 +253,52 @@ class MainActivity : ComponentActivity() {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp, bottom = 8.dp, start = 8.dp, end = 8.dp)
+                    .padding(top = 16.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
             ) {
                 Text(text = "Amount photos: ${viewModel.stateAmountItems.value}")
                 Text(text = "Memory usage: ${viewModel.stateMemoryUsage.value}")
             }
-            if(viewModel.stateAmountItems.value!=0) {
+            if (viewModel.stateAmountItems.value != 0) {
                 LazyVerticalGrid(
 
                     columns = GridCells.Fixed(3),
                     modifier = Modifier
-                        .fillMaxWidth()
                         .fillMaxSize()
+                        .padding(start = 8.dp, end = 8.dp)
                 ) {
                     items(viewModel.stateAmountItems.value) { n ->
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            if(viewModel.stateItems.value!=null && viewModel.stateItems.value!!.size>n) {
+                            if (viewModel.stateItems.value != null && viewModel.stateItems.value!!.size > n) {
                                 val itemModel = viewModel.stateItems.value!![n]
                                 Image(bitmap = itemModel.image,
                                     contentDescription = "photo",
+                                    contentScale = ContentScale.Crop,
                                     modifier = Modifier
                                         .height(150.dp)
                                         .width(150.dp)
                                         .padding(top = 16.dp, start = 8.dp, end = 8.dp)
+                                        .clip(RoundedCornerShape(8.dp))
                                         .clickable {
                                             startPhotoInfoActivity(itemModel)
                                         }
                                 )
                                 Text(
-                                    text = itemModel.filename,
+                                    text = if (itemModel.filename.length > 10) {
+                                        itemModel.filename.substring(0, 7) + "..."
+                                    } else {
+                                        itemModel.filename
+                                    },
                                     modifier = Modifier
-                                        .padding(top = 8.dp)
+                                        .padding(top = 4.dp)
                                 )
-                            }
-                            else {
+                            } else {
                                 Box(
                                     modifier = Modifier
-                                        .height(150.dp)
+                                        .height(164.dp)
                                         .width(150.dp)
+                                        .clip(RoundedCornerShape(80.dp))
                                         .padding(16.dp)
                                         .background(Color.White),
                                     contentAlignment = Alignment.Center
@@ -297,8 +316,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 Box(
                     modifier = Modifier
                         .fillMaxSize(),
@@ -315,6 +333,9 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun Uploading() {
+        val lottieCompositionUploading =
+            rememberLottieComposition(spec = LottieCompositionSpec.Asset("ic_lottie_upload.json"))
+
         ConstraintLayout(
             modifier = Modifier
                 .fillMaxSize()
@@ -323,7 +344,7 @@ class MainActivity : ComponentActivity() {
             val lazyColumnUploadHistory = createRef()
             val textNothingUploaded = createRef()
 
-            if(viewModel.stateUploadingHistory.value.isEmpty()) {
+            if (viewModel.stateUploadingHistory.value.isEmpty()) {
                 Text(
                     text = "Upload your first file!",
                     modifier = Modifier
@@ -334,8 +355,7 @@ class MainActivity : ComponentActivity() {
                             start.linkTo(parent.start)
                         }
                 )
-            }
-            else {
+            } else {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -356,11 +376,14 @@ class MainActivity : ComponentActivity() {
                         end.linkTo(parent.end)
                     }
                     .padding(16.dp)
+                    .size(60.dp)
             ) {
-                Icon(
-                    tint = Color.White,
-                    painter = painterResource(id = R.drawable.ic_show_password),
-                    contentDescription = "upload"
+                LottieAnimation(
+                    composition = lottieCompositionUploading.value,
+                    isPlaying = true,
+                    iterations = LottieConstants.IterateForever,
+                    modifier = Modifier
+                        .fillMaxSize()
                 )
             }
         }
@@ -379,17 +402,16 @@ class MainActivity : ComponentActivity() {
             modifier = Modifier
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp)
         ) {
-            if(item.image==null) {
+            if (item.image == null) {
                 Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_background),
+                    painter = painterResource(id = R.drawable.template_no_image),
                     contentDescription = "image",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .width(80.dp)
                         .height(80.dp)
                 )
-            }
-            else {
+            } else {
                 Image(
                     bitmap = item.image,
                     contentDescription = "image",
@@ -397,6 +419,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier
                         .width(80.dp)
                         .height(80.dp)
+                        .clip(RoundedCornerShape(8.dp))
                 )
             }
             Column(
@@ -405,10 +428,16 @@ class MainActivity : ComponentActivity() {
                     .padding(start = 16.dp)
             ) {
                 Text(
-                    text = item.filename,
+                    text = if(item.filename.length>30) {
+                        item.filename.substring(0, 27) + "..."
+                    }
+                    else {
+                        item.filename
+                    },
                     fontSize = 20.sp,
                     modifier = Modifier
-                        .padding(end = 16.dp))
+                        .padding(end = 16.dp)
+                )
                 Text("Uploaded ${item.date}")
             }
         }
@@ -425,17 +454,17 @@ class MainActivity : ComponentActivity() {
             val navBarItems = listOf(
                 BarItem(
                     title = "Account",
-                    image = Icons.Filled.Face,
+                    drawableId = R.drawable.ic_face,
                     route = Routes.Account.route
                 ),
                 BarItem(
                     title = "Photos",
-                    image = Icons.Filled.Build,
+                    drawableId = R.drawable.ic_photo,
                     route = Routes.Photos.route
                 ),
                 BarItem(
                     title = "Uploading",
-                    image = Icons.Filled.Call,
+                    drawableId = R.drawable.ic_history,
                     route = Routes.Uploading.route
                 )
             )
@@ -454,14 +483,16 @@ class MainActivity : ComponentActivity() {
                     ),
                     onClick = {
                         navController.navigate(navItem.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {saveState = true}
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
                             launchSingleTop = true
                             restoreState = true
                         }
                     },
                     icon = {
                         Icon(
-                            imageVector = navItem.image,
+                            painter = painterResource(id = navItem.drawableId),
                             contentDescription = navItem.title
                         )
                     },
@@ -491,14 +522,14 @@ class MainActivity : ComponentActivity() {
 
     data class BarItem(
         val title: String,
-        val image: ImageVector,
+        @DrawableRes val drawableId: Int,
         val route: String
     )
 
     sealed class Routes(val route: String) {
-        object Account: Routes("account")
-        object Photos: Routes("photos")
-        object Uploading: Routes("uploading")
+        object Account : Routes("account")
+        object Photos : Routes("photos")
+        object Uploading : Routes("uploading")
     }
 
 }

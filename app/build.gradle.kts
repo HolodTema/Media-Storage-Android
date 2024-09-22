@@ -52,8 +52,11 @@ android {
 }
 
 dependencies {
+    //lottie animations
+    implementation(libs.airbnb.lottie.compose)
+
     //room local database
-//    ksp(libs.androidx.room.compiler)
+    //ksp(libs.androidx.room.compiler)
     kapt(libs.androidx.room.compiler)
     implementation(libs.androidx.room.runtime)
 

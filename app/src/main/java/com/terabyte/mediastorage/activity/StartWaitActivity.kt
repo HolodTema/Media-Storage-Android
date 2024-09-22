@@ -7,12 +7,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.sp
 import com.terabyte.mediastorage.retrofit.RetrofitManager
+import com.terabyte.mediastorage.ui.theme.Orange
 import com.terabyte.mediastorage.util.AccessTokenManager
 import com.terabyte.mediastorage.util.UserManager
 
@@ -40,12 +42,15 @@ class StartWaitActivity : ComponentActivity() {
                     },
                     confirmButton = {
                         Button(
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Orange
+                            ),
                             onClick = {
                                 checkIfTokenExpired(AccessTokenManager.getAccessToken())
                                 stateDialog.value = false
                             }
                         ) {
-                            Text("OK", fontSize = 22.sp)
+                            Text("Ok", fontSize = 18.sp)
                         }
                     }
                 )
